@@ -1,14 +1,11 @@
 # Resol Binding
 
-_Give some details about what this binding is meant for - a protocol, system, specific device._
-
-_If possible, provide some resources like pictures, a YouTube video, etc. to give an impression of what can be done with this binding. You can place such resources into a `doc` folder next to this README.md._
+Resol Binding connects to Solar and System Controllers of RESOL - Elektronische Regelungen GmbH, also including branded versions from Viessmann, SOLEX, COSMO, SOLTEX, DeDietrich and many more.
 
 ## Supported Things
 
-_Please describe the different supported things / devices within this section._
-_Which different types are supported, which models were tested etc.?_
-_Note that it is planned to generate some part of this based on the XML files within ```ESH-INF/thing``` of your binding._
+VBusLAN-Bridge as interface to the Resol VBus
+Many Resol Controllers and modules
 
 ## Discovery
 
@@ -33,20 +30,31 @@ _If your binding does not offer any generic configurations, you can remove this 
 
 ## Thing Configuration
 
+Password for the VBusLAN needs to be configured!
 _Describe what is needed to manually configure a thing, either through the (Paper) UI or via a thing-file. This should be mainly about its mandatory and optional configuration parameters. A short example entry for a thing file can help!_
 
 _Note that it is planned to generate some part of this based on the XML files within ```ESH-INF/thing``` of your binding._
 
 ## Channels
 
-_Here you should provide information about available channel types, what their meaning is and how they can be used._
-
-_Note that it is planned to generate some part of this based on the XML files within ```ESH-INF/thing``` of your binding._
+Channels are dynamically created dependent on the devices connected to the VBus. So far only reading is supported.
 
 ## Full Example
 
 _Provide a full usage example based on textual configuration files (*.things, *.items, *.sitemap)._
 
-## Any custom content here!
+## TODO
+- cleanup unit unitfamily and type handling for channels
+- stop interpretation / close TCP connection to VBus adapter on dispose of the BridgeHandler
+  * check if on thing removal (dispose) the BridgeHandler does not try to update it
+- check whether updates shall only be called on data change
+- updateStatus with details, e. g. updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Could not control device at IP address x.x.x.x");
+- cleanup this README
 
-_Feel free to add additional sections for whatever you think should also be mentioned about your binding!_
+- test with multiple VBus bridges
+- remove adapterSerial from Bridge configuration parameters?
+- ask for the password on bridge thing creation
+
+- use mvn dependency or jar file of resol-vbus-java instead of source code
+
+- Add NOTICE file https://www.eclipse.org/projects/handbook/#legaldoc

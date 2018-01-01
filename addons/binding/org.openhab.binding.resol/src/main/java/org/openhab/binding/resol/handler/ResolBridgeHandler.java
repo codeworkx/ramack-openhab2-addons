@@ -128,7 +128,6 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                 thingHandlerMap.put(thingType, thingHandler);
                 logger.trace("register thingHandler for thing: {}", thingType);
                 updateThingHandlerStatus(thingHandler, this.getStatus());
-                // TODO sendSocketData("get " + thingID);
             } else {
                 logger.trace("thingHandler for thing: '{}' allready registerd", thingType);
             }
@@ -276,9 +275,10 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                                                     channelTypeUID = ResolBindingConstants.CHANNEL_TYPE_UID_STRING;
                                                     acceptedItemType = "String";
                                                     logger.warn(
-                                                            "data type {} of field {} in packet from {} not (yet) supported",
-                                                            pfv.getPacketFieldSpec().getType(), pfv.getName(),
-                                                            spec.getSourceDeviceSpec(packet).getName());
+                                                            "data type {} with unit {} of field {} in packet from {} not (yet) supported",
+                                                            pfv.getPacketFieldSpec().getType(),
+                                                            pfv.getPacketFieldSpec().getUnit().getUnitTextText(),
+                                                            pfv.getName(), spec.getSourceDeviceSpec(packet).getName());
 
                                             }
                                             break;

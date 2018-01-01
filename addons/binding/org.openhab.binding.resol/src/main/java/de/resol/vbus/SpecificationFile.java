@@ -35,8 +35,9 @@ public class SpecificationFile {
 
     public static synchronized SpecificationFile getDefaultSpecificationFile() {
         if (defaultSpecificationFile == null) {
-            InputStream is = Thread.currentThread().getContextClassLoader()
-                    .getResourceAsStream("de/resol/vbus/vbus_specification.vsf");
+            // InputStream is = Thread.currentThread().getContextClassLoader()
+            // .getResourceAsStream("de/resol/vbus/vbus_specification.vsf");
+            InputStream is = SpecificationFile.class.getResourceAsStream("vbus_specification.vsf");
             if (is == null) {
                 throw new RuntimeException("resource VSF File could not be loaded");
             }
@@ -475,7 +476,7 @@ public class SpecificationFile {
              * byte[] buffer = new byte[1000];
              * int length = 0;
              * int curlength = 1;
-             * 
+             *
              * while(curlength > 0) {
              * curlength = is.read(buffer);
              * bytes[length]

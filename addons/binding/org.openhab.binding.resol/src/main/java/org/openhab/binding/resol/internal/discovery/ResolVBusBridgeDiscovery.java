@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2017 by the respective copyright holders.
+ * Copyright (c) 2010-2018 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -13,6 +13,7 @@ import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.smarthome.config.discovery.AbstractDiscoveryService;
 import org.eclipse.smarthome.config.discovery.DiscoveryResultBuilder;
 import org.eclipse.smarthome.core.thing.ThingUID;
@@ -23,6 +24,12 @@ import org.slf4j.LoggerFactory;
 import de.resol.vbus.TcpDataSource;
 import de.resol.vbus.TcpDataSourceProvider;
 
+/**
+ * The {@link ResolVBusBridgeDiscovery} class provides the DiscoverySerivce to
+ * discover Resol VBus-LAN adapters
+ *
+ * @author Raphael Mack - Initial contribution
+ */
 public class ResolVBusBridgeDiscovery extends AbstractDiscoveryService {
     private final Logger logger = LoggerFactory.getLogger(ResolVBusBridgeDiscovery.class);
 
@@ -59,8 +66,8 @@ public class ResolVBusBridgeDiscovery extends AbstractDiscoveryService {
                     TcpDataSource dsWithInfo;
                     try {
                         dsWithInfo = TcpDataSourceProvider.fetchInformation(address, 1500);
-                        logger.trace("Discovered Resol VBus-LAN Adapter @" + addressId + " "
-                                + dsWithInfo.getDeviceName() + " (" + dsWithInfo.getSerial() + ")");
+                        logger.trace("Discovered Resol VBus-LAN Adapter @{} {} ({})", addressId,
+                                dsWithInfo.getDeviceName(), dsWithInfo.getSerial());
 
                         currentDataSourceById.put(addressId, dsWithInfo);
                         addAdapter(addressId, dsWithInfo);
@@ -79,7 +86,7 @@ public class ResolVBusBridgeDiscovery extends AbstractDiscoveryService {
 
     private void addAdapter(String remoteIP, TcpDataSource dsWithInfo) {
         String adapterSerial = dsWithInfo.getSerial();
-        Map<String, Object> properties = new HashMap<>(3);
+        Map<@NonNull String, @NonNull Object> properties = new HashMap<>(3);
         properties.put("ipAddress", remoteIP);
         properties.put("port", dsWithInfo.getLivePort());
         properties.put("adapterSerial", adapterSerial);

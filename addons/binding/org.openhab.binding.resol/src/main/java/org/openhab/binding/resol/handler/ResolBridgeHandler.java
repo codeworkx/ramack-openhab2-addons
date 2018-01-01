@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.Channel;
 import org.eclipse.smarthome.core.thing.ChannelUID;
@@ -147,11 +148,11 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
 
     }
 
-    private void updateThingHandlerStatus(ResolThingHandler thingHandler, ThingStatus status) {
+    private void updateThingHandlerStatus(@NonNull ResolThingHandler thingHandler, @NonNull ThingStatus status) {
         thingHandler.updateStatus(status);
     }
 
-    private void updateThingHandlersStatus(ThingStatus status) {
+    private void updateThingHandlersStatus(@NonNull ThingStatus status) {
         for (Map.Entry<String, ResolThingHandler> entry : thingHandlerMap.entrySet()) {
             entry.getValue().updateStatus(status);
         }
@@ -189,8 +190,8 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                         public void connectionStateChanged(Connection connection) {
                             isConnected = (tcpConnection.getConnectionState()
                                     .equals(Connection.ConnectionState.CONNECTED));
-                            logger.trace("Connection state changed to: " + tcpConnection.getConnectionState().toString()
-                                    + " isConnected = " + isConnected);
+                            logger.trace("Connection state changed to: {} isConnected = {}",
+                                    tcpConnection.getConnectionState().toString(), isConnected);
                             updateStatus();
                         }
 
@@ -215,11 +216,12 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                             PacketFieldValue[] pfvs = spec.getPacketFieldValuesForHeaders(new Packet[] { packet });
 
                             for (PacketFieldValue pfv : pfvs) {
-                                logger.trace("Id: " + pfv.getPacketFieldId() + ", Name: " + pfv.getName() + ", Raw: "
-                                        + pfv.getRawValueDouble() + ", Text: " + pfv.formatTextValue(null, null));
+                                logger.trace("Id: {}, Name: {}, Raw: {}, Text: {}", pfv.getPacketFieldId(),
+                                        pfv.getName(), pfv.getRawValueDouble(), pfv.formatTextValue(null, null));
 
                                 ResolThingHandler thingHandler = thingHandlerMap.get(thingType);
                                 if (thingHandler != null) {
+                                    @NonNull
                                     String channelId = pfv.getName();
                                     channelId = channelId.replace(" [", "-");
                                     channelId = channelId.replace("]", "");
@@ -334,7 +336,7 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                                             thingHandler.setChannelValue(channelId, pfv.formatTextValue(null, null));
                                     }
                                 } else {
-                                    logger.trace("ThingHandler for " + thingType + " not registered.");
+                                    logger.trace("ThingHandler for {} not registered.", thingType);
                                 }
                             }
 
@@ -351,7 +353,7 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                     isConnected = false;
                 }
                 if (!isConnected) {
-                    logger.info("Cannot establish connection to " + ipAddress);
+                    logger.info("Cannot establish connection to {}", ipAddress);
                 } else {
                     updateStatus();
                 }

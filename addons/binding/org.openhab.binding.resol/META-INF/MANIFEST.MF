@@ -26,3 +26,4 @@ Import-Package:
  org.osgi.framework,
  org.slf4j
 Service-Component: OSGI-INF/*.xml
+Require-Bundle: com.google.guava

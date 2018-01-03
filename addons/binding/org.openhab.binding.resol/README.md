@@ -4,12 +4,12 @@ Resol Binding connects to Solar and System Controllers of RESOL - Elektronische 
 
 ## Supported Things
 
-VBusLAN-Bridge as interface to the Resol VBus
-Many Resol Controllers and modules
+VBusLAN-Bridge, DataLogger DL2 and DL3 as interface between LAN and Resol VBus
+Many Resol Controllers and Modules like WMZ heat meters, HKM Heating circuit extensions etc.
 
 ## Discovery
 
-Discovery is supported for VBus-LAN adapters, but it should also work for data loggers providing the same IP interface as the VBusLAN-Adapter. 
+Discovery is supported for VBus-LAN adapters , but it should also work for data loggers providing the same IP interface as the VBusLAN-Adapter. 
 
 ## Binding Configuration
 

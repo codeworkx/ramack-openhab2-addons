@@ -8,9 +8,13 @@
  */
 package org.openhab.binding.resol.handler;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.smarthome.core.library.types.DateTimeType;
 import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.eclipse.smarthome.core.library.types.StringType;
 import org.eclipse.smarthome.core.thing.Bridge;
@@ -131,27 +135,44 @@ public class ResolThingHandler extends BaseThingHandler {
 
     }
 
-    public void setChannelValue(String channelId, String value) {
+    public void setChannelValue(String channelId, @Nullable String value) {
         Channel channel = getThing().getChannel(channelId);
         if (channel == null) {
             logger.trace("Cannel '{}:{}' not implemented", getThing().getUID().getId(), channelId);
             return;
         }
+        if (value == null) {
+            logger.trace("Not setting cannel '{}:{}' to null", getThing().getUID().getId(), channelId);
+            return;
+        }
 
         logger.trace("Set {}:{}:{} = {}", getThing().getUID().getId(), channelId, channel.getAcceptedItemType(), value);
         String itmType = channel.getAcceptedItemType();
+        // TODO check string type
         this.updateState(channelId, new StringType(value));
     }
 
-    public void setChannelValue(String channelId, Double value) {
+    public void setChannelValue(String channelId, Date value) {
         Channel channel = getThing().getChannel(channelId);
         if (channel == null) {
-            logger.trace("Channel '{}:{}' not implemented", getThing().getUID().getId(), channelId);
+            logger.trace("Cannel '{}:{}' not implemented", getThing().getUID().getId(), channelId);
             return;
         }
         if (value == null) {
-            // TODO: check why this happens. It should not, I guess...
-            logger.trace("Value null not allowed for channel '{}:{}'", getThing().getUID().getId(), channelId);
+            logger.trace("Not setting cannel '{}:{}' to null", getThing().getUID().getId(), channelId);
+            return;
+        }
+
+        logger.trace("Set {}:{}:{} = {}", getThing().getUID().getId(), channelId, channel.getAcceptedItemType(), value);
+        String itmType = channel.getAcceptedItemType();
+        this.updateState(channelId,
+                new DateTimeType(new SimpleDateFormat(DateTimeType.DATE_PATTERN_WITH_TZ_AND_MS_GENERAL).format(value)));
+    }
+
+    public void setChannelValue(String channelId, double value) {
+        Channel channel = getThing().getChannel(channelId);
+        if (channel == null) {
+            logger.trace("Channel '{}:{}' not implemented", getThing().getUID().getId(), channelId);
             return;
         }
 

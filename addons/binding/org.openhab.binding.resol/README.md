@@ -44,20 +44,17 @@ Channels are dynamically created dependent on the devices connected to the VBus.
 _Provide a full usage example based on textual configuration files (*.things, *.items, *.sitemap)._
 
 ## TODO
+see tickets
 - cleanup unit, unitfamily and type handling for channels
+- check timezones of date and time fields
 - stop interpretation / close TCP connection to VBus adapter on dispose of the BridgeHandler
   * check if on thing removal (dispose) the BridgeHandler does not try to update it
 - check whether updates shall only be called on data change
-- updateStatus with details, e. g. updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Could not control device at IP address x.x.x.x");
 - cleanup this README
-- write support for settable values
 
 - check whether there is a useful way to support/utilize events
 
 - test with multiple VBus bridges
 - remove adapterSerial from Bridge configuration parameters?
-- ask for the password on bridge thing creation
-
-- use mvn dependency or jar file of resol-vbus-java instead of source code
 
 - Add NOTICE file https://www.eclipse.org/projects/handbook/#legaldoc

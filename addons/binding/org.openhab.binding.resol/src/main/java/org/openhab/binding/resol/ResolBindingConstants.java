@@ -12,7 +12,6 @@ import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
-import org.eclipse.smarthome.core.thing.type.ChannelTypeUID;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -29,33 +28,8 @@ public class ResolBindingConstants {
 
     public static final String BRIDGE_VBUSLAN = "vbuslan";
 
-    // List of all ChannelTypeUIDs
-    public static final ChannelTypeUID CHANNEL_TYPE_UID_TEMP = new ChannelTypeUID(ResolBindingConstants.BINDING_ID,
-            "sensor_temp");
-
-    public static final ChannelTypeUID CHANNEL_TYPE_UID_VOLUME = new ChannelTypeUID(ResolBindingConstants.BINDING_ID,
-            "volume");
-
-    public static final ChannelTypeUID CHANNEL_TYPE_UID_VOLUME_FLOW = new ChannelTypeUID(
-            ResolBindingConstants.BINDING_ID, "volume_flow");
-
-    public static final ChannelTypeUID CHANNEL_TYPE_UID_PRESSURE = new ChannelTypeUID(ResolBindingConstants.BINDING_ID,
-            "pressure");
-
-    public static final ChannelTypeUID CHANNEL_TYPE_UID_POWER = new ChannelTypeUID(ResolBindingConstants.BINDING_ID,
-            "power");
-
-    public static final ChannelTypeUID CHANNEL_TYPE_UID_ENERGY = new ChannelTypeUID(ResolBindingConstants.BINDING_ID,
-            "energy");
-
-    public static final ChannelTypeUID CHANNEL_TYPE_UID_TIME = new ChannelTypeUID(ResolBindingConstants.BINDING_ID,
-            "time");
-
-    public static final ChannelTypeUID CHANNEL_TYPE_UID_DATETIME = new ChannelTypeUID(ResolBindingConstants.BINDING_ID,
-            "dateTime");
-
-    public static final ChannelTypeUID CHANNEL_TYPE_UID_STRING = new ChannelTypeUID(ResolBindingConstants.BINDING_ID,
-            "String");
+    // List of all ChannelTypeUIDs is empty, as we got totally rid of static channel types.
+    // ChannelTypeUIDs are constructed from the BINDING_ID and the UnitCodeTextIndex from teh VSF
 
     // List of all Thing Type
     public static final String THING_ID_DEVICE = "device";

@@ -8,6 +8,7 @@
  */
 package org.openhab.binding.resol.handler;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.InetAddress;
@@ -202,22 +203,29 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                             thingType = thingType.replace(" #", "-");
                             thingType = thingType.replace(" ", "_");
 
-                            // logger.trace("Received Data from " + spec.getSourceDeviceSpec(packet).getName()
-                            // + " naming it " + thingId);
+                            if (spec.getSourceDeviceSpec(packet).getPeerAddress() == 0x10) {
+                                logger.trace("Received Data from " + spec.getSourceDeviceSpec(packet).getName() + " (0x"
+                                        + Integer.toHexString(spec.getSourceDeviceSpec(packet).getSelfAddress()) + "/0x"
+                                        + Integer.toHexString(spec.getSourceDeviceSpec(packet).getPeerAddress()) + ")"
+                                        + " naming it " + thingType);
+                            } else {
+                                logger.trace("Ignoring Data from " + spec.getSourceDeviceSpec(packet).getName() + " (0x"
+                                        + Integer.toHexString(spec.getSourceDeviceSpec(packet).getSelfAddress()) + "/0x"
+                                        + Integer.toHexString(spec.getSourceDeviceSpec(packet).getPeerAddress()) + ")"
+                                        + " naming it " + thingType);
+                                return;
+                            }
 
                             if (!availableDevices.contains(thingType)) {
                                 // register new device
                                 createThing(ResolBindingConstants.THING_ID_DEVICE, thingType);
                                 availableDevices.add(thingType);
                             }
-                            String channelList;
 
                             PacketFieldValue[] pfvs = spec.getPacketFieldValuesForHeaders(new Packet[] { packet });
-
                             for (PacketFieldValue pfv : pfvs) {
                                 logger.trace("Id: {}, Name: {}, Raw: {}, Text: {}", pfv.getPacketFieldId(),
                                         pfv.getName(), pfv.getRawValueDouble(), pfv.formatTextValue(null, null));
-
                                 ResolThingHandler thingHandler = thingHandlerMap.get(thingType);
                                 if (thingHandler != null) {
                                     @NonNull
@@ -229,69 +237,72 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                                     channelId = channelId.replace(".", "_");
                                     channelId = channelId.replace(":", "_");
                                     ChannelTypeUID channelTypeUID;
+
+                                    if (pfv.getPacketFieldSpec().getUnit().getUnitId() >= 0) {
+                                        channelTypeUID = new ChannelTypeUID(ResolBindingConstants.BINDING_ID,
+                                                pfv.getPacketFieldSpec().getUnit().getUnitCodeText());
+                                        // TODO: add precision
+                                    } else {
+                                        channelTypeUID = new ChannelTypeUID(ResolBindingConstants.BINDING_ID, "any");
+                                    }
+
                                     String acceptedItemType = "String";
 
                                     Thing thing = thingHandler.getThing();
                                     switch (pfv.getPacketFieldSpec().getUnit().getUnitFamily()) {
                                         case Temperature:
-                                            channelTypeUID = ResolBindingConstants.CHANNEL_TYPE_UID_TEMP;
                                             acceptedItemType = "Number";
                                             break;
                                         case Energy:
-                                            channelTypeUID = ResolBindingConstants.CHANNEL_TYPE_UID_ENERGY;
                                             acceptedItemType = "Number";
                                             break;
                                         case Power:
-                                            channelTypeUID = ResolBindingConstants.CHANNEL_TYPE_UID_POWER;
                                             acceptedItemType = "Number";
                                             break;
                                         case Volume:
-                                            channelTypeUID = ResolBindingConstants.CHANNEL_TYPE_UID_VOLUME;
                                             acceptedItemType = "Number";
                                             break;
                                         case VolumeFlow:
-                                            channelTypeUID = ResolBindingConstants.CHANNEL_TYPE_UID_VOLUME_FLOW;
                                             acceptedItemType = "Number";
                                             break;
                                         case Time:
-                                            channelTypeUID = ResolBindingConstants.CHANNEL_TYPE_UID_TIME;
                                             acceptedItemType = "Number";
                                             break;
                                         case Pressure:
-                                            channelTypeUID = ResolBindingConstants.CHANNEL_TYPE_UID_PRESSURE;
                                             acceptedItemType = "Number";
                                             break;
                                         case None:
                                             /* TODO: add special handling of error, resistence (EM) */
                                             switch (pfv.getPacketFieldSpec().getType()) {
                                                 case DateTime:
-                                                    channelTypeUID = ResolBindingConstants.CHANNEL_TYPE_UID_DATETIME;
                                                     acceptedItemType = "DateTime";
                                                     break;
                                                 case WeekTime:
                                                 case Time:
                                                 case Number: /* TODO: add Pump_speed_relay */
                                                 default:
-                                                    channelTypeUID = ResolBindingConstants.CHANNEL_TYPE_UID_STRING;
-                                                    acceptedItemType = "String";
-                                                    logger.warn(
-                                                            "data type {} with unit {} of field {} in packet from {} not (yet) supported",
-                                                            pfv.getPacketFieldSpec().getType(),
-                                                            pfv.getPacketFieldSpec().getUnit().getUnitTextText(),
-                                                            pfv.getName(), spec.getSourceDeviceSpec(packet).getName());
+                                                    acceptedItemType = "Number";
+                                                    /*
+                                                     * logger.warn(
+                                                     * "data type {} with unit {} of field {} in packet from {} not (yet) supported"
+                                                     * ,
+                                                     * pfv.getPacketFieldSpec().getType(),
+                                                     * pfv.getPacketFieldSpec().getUnit().getUnitTextText(),
+                                                     * pfv.getName(), spec.getSourceDeviceSpec(packet).getName());
+                                                     */
 
                                             }
                                             break;
 
                                         default:
-                                            channelTypeUID = ResolBindingConstants.CHANNEL_TYPE_UID_STRING;
                                             logger.warn("unit {} of field {} in packet from {} not (yet) supported",
                                                     pfv.getPacketFieldSpec().getUnit().getUnitTextText(), pfv.getName(),
                                                     spec.getSourceDeviceSpec(packet).getName());
 
                                     }
 
-                                    if (thing.getChannel(channelId) == null) {
+                                    if (thing.getChannel(channelId) == null && pfv.getRawValueDouble() != null) {
+
                                         logger.trace("adding channel {} as {} to {}", pfv.getName(), channelId,
                                                 thingHandler.getThing().getUID());
                                         ThingBuilder thingBuilder = thingHandler.editThing();
@@ -312,20 +323,23 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                                         case VolumeFlow:
                                         case Time: /* Time is a time span */
                                         case Pressure:
-                                            thingHandler.setChannelValue(channelId, pfv.getRawValueDouble());
+                                            Double dd = pfv.getRawValueDouble();
+                                            if (dd != null) {
+                                                thingHandler.setChannelValue(channelId, dd.doubleValue());
+                                            } else {
+                                                dd = pfv.getRawValueDouble();
+                                            }
                                             break;
                                         case None:
                                             switch (pfv.getPacketFieldSpec().getType()) {
                                                 case Number:
-                                                    thingHandler.setChannelValue(channelId,
-                                                            pfv.formatTextValue(null, null));// getRawValueDouble());
+                                                    thingHandler.setChannelValue(channelId, pfv.getRawValueDouble());
                                                     break;
                                                 case DateTime:
-                                                    thingHandler.setChannelValue(channelId,
-                                                            pfv.formatTextValue(null, null));
-                                                    break;
                                                 case WeekTime:
                                                 case Time:
+                                                    thingHandler.setChannelValue(channelId, pfv.getRawValueDate());
+                                                    break;
                                                 default:
                                                     thingHandler.setChannelValue(channelId,
                                                             pfv.formatTextValue(null, null));
@@ -339,13 +353,13 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                                     logger.trace("ThingHandler for {} not registered.", thingType);
                                 }
                             }
-
                         }
 
                     });
 
                     // Establish the connection
                     tcpConnection.connect();
+                    Thread.sleep(1000); // after a reconnect wait 1 sec
                     isConnected = (tcpConnection.getConnectionState().equals(Connection.ConnectionState.CONNECTED));
                 } catch (Exception e) {
                     logger.trace("Connection failed", e);
@@ -399,6 +413,11 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
 
         if (pollingJob != null && !pollingJob.isCancelled()) {
             pollingJob.cancel(true);
+            try {
+                tcpConnection.disconnect();
+            } catch (IOException ioe) {
+                // we don't care
+            }
             pollingJob = null;
         }
         updateStatus(ThingStatus.OFFLINE); // Set all State to offline

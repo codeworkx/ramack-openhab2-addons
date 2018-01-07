@@ -54,6 +54,20 @@ import de.resol.vbus.SpecificationFile.Unit;
  *   provide them to the constructor of the `Specification` class.
  */
 public class Specification {
+	/**
+	 * Offset of date fields in the VBUS data since epoch in seconds.
+	 */
+	public static final double DATE_OFFSET = 978307200;
+
+	/**
+	 * Offset of date fields in the VBUS data since in 1/4 hours.
+	 */
+	public static final double WEEKTIME_OFFSET = 5760;
+
+	/**
+	 * Offset of date fields in the VBUS data since in minuts.
+	 */
+	public static final double TIME_OFFSET = 0;
 
 	private static Specification defaultSpecification = null;
 	
@@ -134,6 +148,7 @@ public class Specification {
 			protected String formatTextValue(double rawValue, Locale locale, int precision) {
 				String textValue;
 				textValue = TIME_FORMATTER.format(new Date(Math.round(rawValue) * 60000));
+                                // TODO: use getRawValueDate here?
 				return textValue;
 			}
 
@@ -144,7 +159,8 @@ public class Specification {
 			@Override
 			protected String formatTextValue(double rawValue, Locale locale, int precision) {
 				String textValue;
-				textValue = WEEKTIME_FORMATTER.format(new Date(Math.round(rawValue + 5760) * 60000));
+				textValue = WEEKTIME_FORMATTER.format(new Date(Math.round(rawValue + Specification.WEEKTIME_OFFSET) * 60000));
+                                // TODO: use getRawValueDate here?
 				return textValue;
 			}
 
@@ -155,7 +171,8 @@ public class Specification {
 			@Override
 			protected String formatTextValue(double rawValue, Locale locale, int precision) {
 				String textValue;
-				textValue = DATETIME_FORMATTER.format(new Date(Math.round(rawValue + 978307200) * 1000));
+				textValue = DATETIME_FORMATTER.format(new Date(Math.round(rawValue + Specification.DATE_OFFSET) * 1000));
+                                // TODO: use getRawValueDate here?
 				return textValue;
 			}
 
@@ -423,6 +440,10 @@ public class Specification {
 			return Specification.this.getRawValueDouble(packetFieldSpec, packet.frameData, 0, packet.frameCount * 4);
 		}
 		
+		public Date getRawValueDate() {
+			return Specification.this.getRawValueDate(packetFieldSpec, packet.frameData, 0, packet.frameCount * 4);
+		}
+		
 		public String formatTextValue(Unit unit, Locale locale) {
 			return Specification.this.formatTextValueFromRawValue(packetFieldSpec, getRawValueDouble(), unit, locale);
 		}
@@ -551,6 +572,15 @@ public class Specification {
 		
 		return result;
 	}
+    
+	/**
+	  * Get the list of known units.
+	  *
+	  * @return array of known Units.
+	  */
+	  public Unit[] getUnits() {
+		return specificationFile.getUnits();
+	  }
 	
 	/**
 	 * Get optional raw value from `Packet` payload data as a Long.
@@ -606,7 +636,43 @@ public class Specification {
 		return rawValueDouble;
 	}
 
-	protected String formatTextValueFromRawValueInternal(double rawValue, Unit unit, Locale locale, Type rootType, int precision, Unit defaultUnit) {
+	/**
+	 * Get optional raw value from `Packet` payload data as a Date.
+	 * 
+	 * @param pfs `PacketFieldSpec` instance of field to get value for.
+	 * @param buffer Byte array containing `Packet` payload data.
+	 * @param start Start index into the buffer.
+	 * @param length Length of the buffer.
+	 * @return The date object or `null` if the buffer was too small for a value or the packet field
+	 *         is not a DateTime, Time or WeekTime field
+	 */
+	public Date getRawValueDate(PacketFieldSpec pfs, byte[] buffer, int start, int length) {
+		Long rawValueLong = getRawValueLong(pfs, buffer, start, length);
+		Date result;
+		if (rawValueLong != null) {
+			Double rawValueDouble;
+			rawValueDouble = new Double(rawValueLong.doubleValue());
+			switch (pfs.getType()){
+			case DateTime:
+				result = new Date(Math.round(rawValueDouble + Specification.DATE_OFFSET) * 1000);
+				break;
+			case Time:
+				result = new Date(Math.round(rawValueDouble + Specification.TIME_OFFSET) * 60 * 1000);
+				break;
+			case WeekTime:
+				result = new Date(Math.round(rawValueDouble + Specification.WEEKTIME_OFFSET) * 60 * 1000);
+				break;
+			default:
+				result = null;
+				break;
+			}
+		} else {
+			result = null;
+		}
+		return result;
+	}
+
+    protected String formatTextValueFromRawValueInternal(double rawValue, Unit unit, Locale locale, Type rootType, int precision, Unit defaultUnit) {
 		String unitText;
 		if (unit != null) {
 			unitText = unit.getUnitTextText();

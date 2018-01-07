@@ -9,67 +9,13 @@
             <bridge-type-ref id="vbuslan" />
         </supported-bridge-type-refs>
         
-		<label>Resol Controller</label>
+		<label>Resol Device</label>
 		<description>Solar or system controller (or any other device on the VBus) from Resol.</description>
 	</thing-type>
-
-    <channel-type id="sensor_temp">
-        <item-type>Number</item-type>
-        <label>Temperature</label>
-        <description>Temperature sensor</description>
-        <category>Temperature</category>
-        <state pattern="%.1f °C" readOnly="true"/>
-    </channel-type>
     
-    <channel-type id="volume">
-        <item-type>Number</item-type>
-        <label>Volume</label>
-        <description>Volume</description>
-        <state pattern="%.0f l" readOnly="true"/>
-    </channel-type>
-    
-    <channel-type id="volume_flow">
-        <item-type>Number</item-type>
-        <label>VolumeFlow</label>
-        <description>Volume</description>
-        <state pattern="%.0f l/h" readOnly="true"/>
-    </channel-type>
-    
-    <channel-type id="pressure">
-        <item-type>Number</item-type>
-        <label>Pressure</label>
-        <description>Pressure</description>
-        <state pattern="%.1f bar" readOnly="true"/>
-    </channel-type>
-    
-    <channel-type id="power">
-        <item-type>Number</item-type>
-        <label>Power</label>
-        <description>Power</description>
-        <category>Heat</category>
-        <state pattern="%.0f W" readOnly="true"/>
-    </channel-type>
-    
-    <channel-type id="time">
-        <item-type>Number</item-type>
-        <label>Time</label>
-        <description>Elapsed time</description>
-        <state pattern="%.0f s" readOnly="true"/>
-    </channel-type>
-
-    <channel-type id="energy">
-        <item-type>Number</item-type>
-        <label>Energy</label>
-        <description>Heat Quantity</description>
-        <category>Heat</category>
-        <state pattern="%.0f Wh" readOnly="true"/>
-    </channel-type>
-    
-    <channel-type id="dateTime">
-        <item-type>DateTime</item-type>
-        <label>Date</label>
-        <description>Absolute Time</description>
-        <category>Date</category>
+    <channel-type id="None">
+        <item-type>String</item-type>
+        <label>Any</label>
         <state readOnly="true" />
     </channel-type>
     

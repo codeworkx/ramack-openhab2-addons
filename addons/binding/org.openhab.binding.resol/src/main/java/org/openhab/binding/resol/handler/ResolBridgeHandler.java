@@ -42,6 +42,7 @@ import de.resol.vbus.ConnectionAdapter;
 import de.resol.vbus.Packet;
 import de.resol.vbus.Specification;
 import de.resol.vbus.Specification.PacketFieldValue;
+import de.resol.vbus.SpecificationFile;
 import de.resol.vbus.TcpDataSource;
 import de.resol.vbus.TcpDataSourceProvider;
 
@@ -216,6 +217,7 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                                 return;
                             }
 
+                            // TODO: if the thing gets deleted, we should also remove it from this list...
                             if (!availableDevices.contains(thingType)) {
                                 // register new device
                                 createThing(ResolBindingConstants.THING_ID_DEVICE, thingType);
@@ -232,6 +234,8 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                                     String channelId = pfv.getName();
                                     channelId = channelId.replace(" [", "-");
                                     channelId = channelId.replace("]", "");
+                                    channelId = channelId.replace("(", "");
+                                    channelId = channelId.replace(")", "");
                                     channelId = channelId.replace(" #", "-");
                                     channelId = channelId.replace(" ", "_");
                                     channelId = channelId.replace(".", "_");
@@ -242,69 +246,53 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                                         channelTypeUID = new ChannelTypeUID(ResolBindingConstants.BINDING_ID,
                                                 pfv.getPacketFieldSpec().getUnit().getUnitCodeText());
                                         // TODO: add precision
+                                    } else if (pfv.getPacketFieldSpec().getType() == SpecificationFile.Type.Number) {
+                                        channelTypeUID = new ChannelTypeUID(ResolBindingConstants.BINDING_ID, "None");
+                                    } else if (pfv.getPacketFieldSpec().getType() == SpecificationFile.Type.DateTime) {
+                                        channelTypeUID = new ChannelTypeUID(ResolBindingConstants.BINDING_ID,
+                                                "DateTime");
+                                        /*
+                                         * so far there seems no reasonable type for WeekDay and Time types, so we just
+                                         * make them strings
+                                         */
+                                        /*
+                                         * } else if (pfv.getPacketFieldSpec().getType() ==
+                                         * SpecificationFile.Type.WeekTime) {
+                                         * channelTypeUID = new ChannelTypeUID(ResolBindingConstants.BINDING_ID,
+                                         * "WeekTime");
+                                         * } else if (pfv.getPacketFieldSpec().getType() == SpecificationFile.Type.Time)
+                                         * {
+                                         * channelTypeUID = new ChannelTypeUID(ResolBindingConstants.BINDING_ID,
+                                         * "Time");
+                                         */
                                     } else {
-                                        channelTypeUID = new ChannelTypeUID(ResolBindingConstants.BINDING_ID, "any");
+                                        channelTypeUID = new ChannelTypeUID(ResolBindingConstants.BINDING_ID, "None");
                                     }
+                                    // TODO: use StringListType for interpreted String lists like Operation Status?
 
                                     String acceptedItemType = "String";
 
                                     Thing thing = thingHandler.getThing();
-                                    switch (pfv.getPacketFieldSpec().getUnit().getUnitFamily()) {
-                                        case Temperature:
-                                            acceptedItemType = "Number";
+                                    switch (pfv.getPacketFieldSpec().getType()) {
+                                        case DateTime:
+                                            acceptedItemType = "DateTime";
                                             break;
-                                        case Energy:
-                                            acceptedItemType = "Number";
-                                            break;
-                                        case Power:
-                                            acceptedItemType = "Number";
-                                            break;
-                                        case Volume:
-                                            acceptedItemType = "Number";
-                                            break;
-                                        case VolumeFlow:
+                                        case WeekTime:
+                                        case Number:
                                             acceptedItemType = "Number";
                                             break;
                                         case Time:
-                                            acceptedItemType = "Number";
-                                            break;
-                                        case Pressure:
-                                            acceptedItemType = "Number";
-                                            break;
-                                        case None:
-                                            /* TODO: add special handling of error, resistence (EM) */
-                                            switch (pfv.getPacketFieldSpec().getType()) {
-                                                case DateTime:
-                                                    acceptedItemType = "DateTime";
-                                                    break;
-                                                case WeekTime:
-                                                case Time:
-                                                case Number: /* TODO: add Pump_speed_relay */
-                                                default:
-                                                    acceptedItemType = "Number";
-                                                    /*
-                                                     * logger.warn(
-                                                     * "data type {} with unit {} of field {} in packet from {} not (yet) supported"
-                                                     * ,
-                                                     * pfv.getPacketFieldSpec().getType(),
-                                                     * pfv.getPacketFieldSpec().getUnit().getUnitTextText(),
-                                                     * pfv.getName(), spec.getSourceDeviceSpec(packet).getName());
-                                                     */
-
-                                            }
-                                            break;
-
                                         default:
-                                            logger.warn("unit {} of field {} in packet from {} not (yet) supported",
-                                                    pfv.getPacketFieldSpec().getUnit().getUnitTextText(), pfv.getName(),
-                                                    spec.getSourceDeviceSpec(packet).getName());
+                                            acceptedItemType = "String";
+                                            break;
 
                                     }
 
                                     if (thing.getChannel(channelId) == null && pfv.getRawValueDouble() != null) {
-
-                                        logger.trace("adding channel {} as {} to {}", pfv.getName(), channelId,
-                                                thingHandler.getThing().getUID());
+                                        if (pfv.getName().contains("date")) {
+                                            logger.trace("adding channel {} as {} to {}", pfv.getName(), channelId,
+                                                    thingHandler.getThing().getUID());
+                                        }
                                         ThingBuilder thingBuilder = thingHandler.editThing();
 
                                         ChannelUID channelUID = new ChannelUID(thing.getUID(), channelId);
@@ -315,37 +303,23 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
 
                                         thingHandler.updateThing(thingBuilder.build());
                                     }
-                                    switch (pfv.getPacketFieldSpec().getUnit().getUnitFamily()) {
-                                        case Temperature:
-                                        case Energy:
-                                        case Power:
-                                        case Volume:
-                                        case VolumeFlow:
-                                        case Time: /* Time is a time span */
-                                        case Pressure:
+                                    switch (pfv.getPacketFieldSpec().getType()) {
+                                        case Number:
                                             Double dd = pfv.getRawValueDouble();
                                             if (dd != null) {
                                                 thingHandler.setChannelValue(channelId, dd.doubleValue());
                                             } else {
-                                                dd = pfv.getRawValueDouble();
+                                                /*
+                                                 * field not available in this packet, e. g. old firmware version not
+                                                 * (yet) transmitting it
+                                                 */
                                             }
                                             break;
-                                        case None:
-                                            switch (pfv.getPacketFieldSpec().getType()) {
-                                                case Number:
-                                                    thingHandler.setChannelValue(channelId, pfv.getRawValueDouble());
-                                                    break;
-                                                case DateTime:
-                                                case WeekTime:
-                                                case Time:
-                                                    thingHandler.setChannelValue(channelId, pfv.getRawValueDate());
-                                                    break;
-                                                default:
-                                                    thingHandler.setChannelValue(channelId,
-                                                            pfv.formatTextValue(null, null));
-                                            }
+                                        case DateTime:
+                                            thingHandler.setChannelValue(channelId, pfv.getRawValueDate());
                                             break;
-
+                                        case WeekTime:
+                                        case Time:
                                         default:
                                             thingHandler.setChannelValue(channelId, pfv.formatTextValue(null, null));
                                     }
@@ -421,8 +395,6 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
             pollingJob = null;
         }
         updateStatus(ThingStatus.OFFLINE); // Set all State to offline
-
-        // TODO: stop polling
     }
 
 }

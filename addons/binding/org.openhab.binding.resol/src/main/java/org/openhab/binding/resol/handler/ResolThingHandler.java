@@ -49,19 +49,7 @@ public class ResolThingHandler extends BaseThingHandler {
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        String cmd = command.toString();
-        logger.trace("command {} on {}", cmd, channelUID);
-        // TODO ignoring bridgeHandler.updateChannel(getThing().getUID().getId(), channelUID.getId(),
-        // command.toString());
-
-        // if (channelUID.getId().equals(CHANNEL_1)) {
-        // TODO: handle command
-
-        // Note: if communication with thing fails for some reason,
-        // indicate that by setting the status with detail information
-        // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-        // "Could not control device at IP address x.x.x.x");
-        // }
+        /* we ignore the commands for now on purpose */
     }
 
     @Override
@@ -138,33 +126,39 @@ public class ResolThingHandler extends BaseThingHandler {
     public void setChannelValue(String channelId, @Nullable String value) {
         Channel channel = getThing().getChannel(channelId);
         if (channel == null) {
-            logger.trace("Cannel '{}:{}' not implemented", getThing().getUID().getId(), channelId);
+            logger.trace("Channel '{}:{}' not implemented", getThing().getUID().getId(), channelId);
             return;
         }
         if (value == null) {
-            logger.trace("Not setting cannel '{}:{}' to null", getThing().getUID().getId(), channelId);
+            logger.trace("Not setting channel '{}:{}' to null", getThing().getUID().getId(), channelId);
+            return;
+        }
+        if (!channel.getAcceptedItemType().equals("String")) {
+            logger.trace("Channel '{}:{}' expected to have a String type for parameters '{}'",
+                    getThing().getUID().getId(), channelId, value.toString());
             return;
         }
 
         logger.trace("Set {}:{}:{} = {}", getThing().getUID().getId(), channelId, channel.getAcceptedItemType(), value);
-        String itmType = channel.getAcceptedItemType();
-        // TODO check string type
         this.updateState(channelId, new StringType(value));
     }
 
     public void setChannelValue(String channelId, Date value) {
         Channel channel = getThing().getChannel(channelId);
         if (channel == null) {
-            logger.trace("Cannel '{}:{}' not implemented", getThing().getUID().getId(), channelId);
+            logger.trace("Channel '{}:{}' not implemented", getThing().getUID().getId(), channelId);
             return;
         }
         if (value == null) {
-            logger.trace("Not setting cannel '{}:{}' to null", getThing().getUID().getId(), channelId);
+            logger.trace("Not setting channel '{}:{}' to null", getThing().getUID().getId(), channelId);
             return;
         }
-
+        if (!channel.getAcceptedItemType().equals("DateTime")) {
+            logger.trace("Channel '{}:{}' expected to have a DateTime type for parameters '{}'",
+                    getThing().getUID().getId(), channelId, value.toString());
+            return;
+        }
         logger.trace("Set {}:{}:{} = {}", getThing().getUID().getId(), channelId, channel.getAcceptedItemType(), value);
-        String itmType = channel.getAcceptedItemType();
         this.updateState(channelId,
                 new DateTimeType(new SimpleDateFormat(DateTimeType.DATE_PATTERN_WITH_TZ_AND_MS_GENERAL).format(value)));
     }

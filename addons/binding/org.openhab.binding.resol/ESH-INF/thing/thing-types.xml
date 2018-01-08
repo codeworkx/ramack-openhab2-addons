@@ -18,5 +18,11 @@
         <label>Any</label>
         <state readOnly="true" />
     </channel-type>
+
+    <channel-type id="DateTime">
+        <item-type>DateTime</item-type>
+        <label>date</label>
+        <state readOnly="true" />
+    </channel-type>
     
 </thing:thing-descriptions>

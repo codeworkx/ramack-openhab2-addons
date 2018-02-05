@@ -240,6 +240,7 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                                     channelId = channelId.replace(" ", "_");
                                     channelId = channelId.replace(".", "_");
                                     channelId = channelId.replace(":", "_");
+                                    channelId = channelId.replace("/", "_");
                                     ChannelTypeUID channelTypeUID;
 
                                     if (pfv.getPacketFieldSpec().getUnit().getUnitId() >= 0) {

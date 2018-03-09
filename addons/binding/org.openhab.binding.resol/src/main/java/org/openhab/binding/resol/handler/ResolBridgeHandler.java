@@ -203,6 +203,8 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                             thingType = thingType.replace("]", "");
                             thingType = thingType.replace(" #", "-");
                             thingType = thingType.replace(" ", "_");
+                            thingType = thingType.replace("/", "_");
+                            thingType = thingType.replaceAll("[^A-Za-z0-9_-]+", "_");
 
                             if (spec.getSourceDeviceSpec(packet).getPeerAddress() == 0x10) {
                                 logger.trace("Received Data from " + spec.getSourceDeviceSpec(packet).getName() + " (0x"
@@ -234,13 +236,11 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                                     String channelId = pfv.getName();
                                     channelId = channelId.replace(" [", "-");
                                     channelId = channelId.replace("]", "");
-                                    channelId = channelId.replace("(", "");
+                                    channelId = channelId.replace("(", "-");
                                     channelId = channelId.replace(")", "");
                                     channelId = channelId.replace(" #", "-");
-                                    channelId = channelId.replace(" ", "_");
-                                    channelId = channelId.replace(".", "_");
-                                    channelId = channelId.replace(":", "_");
-                                    channelId = channelId.replace("/", "_");
+                                    channelId = channelId.replaceAll("[^A-Za-z0-9_-]+", "_");
+
                                     ChannelTypeUID channelTypeUID;
 
                                     if (pfv.getPacketFieldSpec().getUnit().getUnitId() >= 0) {

@@ -31,6 +31,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import de.resol.vbus.SpecificationFile.Enum;
+import de.resol.vbus.SpecificationFile.EnumVariant;
 import de.resol.vbus.SpecificationFile.Language;
 import de.resol.vbus.SpecificationFile.PacketTemplateFieldPart;
 import de.resol.vbus.SpecificationFile.Type;
@@ -54,20 +56,6 @@ import de.resol.vbus.SpecificationFile.Unit;
  *   provide them to the constructor of the `Specification` class.
  */
 public class Specification {
-	/**
-	 * Offset of date fields in the VBUS data since epoch in seconds.
-	 */
-	public static final double DATE_OFFSET = 978307200;
-
-	/**
-	 * Offset of date fields in the VBUS data since in 1/4 hours.
-	 */
-	public static final double WEEKTIME_OFFSET = 5760;
-
-	/**
-	 * Offset of date fields in the VBUS data since in minuts.
-	 */
-	public static final double TIME_OFFSET = 0;
 
 	private static Specification defaultSpecification = null;
 	
@@ -85,8 +73,8 @@ public class Specification {
 		return defaultSpecification;
 	}
 
-	private static DateFormat createUtcDateFormat(String format) {
-		SimpleDateFormat sdf = new SimpleDateFormat(format);
+	private static DateFormat createUtcDateFormat(String format, Locale locale) {
+		SimpleDateFormat sdf = new SimpleDateFormat(format, locale);
 		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 		return sdf;
 	}
@@ -114,9 +102,9 @@ public class Specification {
 		
 		protected abstract String formatTextValue(double rawValue, Locale locale, int precision);
 		
-		private static final DateFormat TIME_FORMATTER = createUtcDateFormat("HH:mm"); 
-		private static final DateFormat WEEKTIME_FORMATTER = createUtcDateFormat("EEE,HH:mm"); 
-		private static final DateFormat DATETIME_FORMATTER = createUtcDateFormat("yyyy-MM-dd HH:mm:ss");
+		private static final String TIME_FORMAT_STRING = "HH:mm"; 
+		private static final String WEEKTIME_FORMAT_STRING = "EEE,HH:mm"; 
+		private static final String DATETIME_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss";
 
 		public static final Formatter Number = new Formatter("Number") {
 			
@@ -147,8 +135,7 @@ public class Specification {
 			@Override
 			protected String formatTextValue(double rawValue, Locale locale, int precision) {
 				String textValue;
-				textValue = TIME_FORMATTER.format(new Date(Math.round(rawValue) * 60000));
-                                // TODO: use getRawValueDate here?
+				textValue = createUtcDateFormat(TIME_FORMAT_STRING, locale).format(new Date(Math.round(rawValue) * 60000));
 				return textValue;
 			}
 
@@ -159,8 +146,7 @@ public class Specification {
 			@Override
 			protected String formatTextValue(double rawValue, Locale locale, int precision) {
 				String textValue;
-				textValue = WEEKTIME_FORMATTER.format(new Date(Math.round(rawValue + Specification.WEEKTIME_OFFSET) * 60000));
-                                // TODO: use getRawValueDate here?
+				textValue = createUtcDateFormat(WEEKTIME_FORMAT_STRING, locale).format(new Date(Math.round(rawValue + 5760) * 60000));
 				return textValue;
 			}
 
@@ -171,8 +157,7 @@ public class Specification {
 			@Override
 			protected String formatTextValue(double rawValue, Locale locale, int precision) {
 				String textValue;
-				textValue = DATETIME_FORMATTER.format(new Date(Math.round(rawValue + Specification.DATE_OFFSET) * 1000));
-                                // TODO: use getRawValueDate here?
+				textValue = createUtcDateFormat(DATETIME_FORMAT_STRING, locale).format(new Date(Math.round(rawValue + 978307200) * 1000));
 				return textValue;
 			}
 
@@ -282,7 +267,7 @@ public class Specification {
 	
 		private SpecificationFile.PacketTemplateField packetTemplateField;
 		
-		public PacketFieldSpec(SpecificationFile.PacketTemplateField packetTemplateField) {
+		protected PacketFieldSpec(SpecificationFile.PacketTemplateField packetTemplateField) {
 			this.packetTemplateField = packetTemplateField;
 		}
 
@@ -320,6 +305,21 @@ public class Specification {
 
 		public PacketTemplateFieldPart[] getParts() {
 			return packetTemplateField.getParts();
+		}
+		
+		public Enum getEnum() {
+			return packetTemplateField.getEnum();
+		}
+		
+		public EnumVariant getEnumVariantForRawValue(long rawValue) {
+			Enum enum_ = packetTemplateField.getEnum();
+			EnumVariant enumVariant;
+			if (enum_ != null) {
+				enumVariant = enum_.getEnumVariantForValue(rawValue);
+			} else {
+				enumVariant = null;
+			}
+			return enumVariant;
 		}
 
 	}
@@ -440,12 +440,43 @@ public class Specification {
 			return Specification.this.getRawValueDouble(packetFieldSpec, packet.frameData, 0, packet.frameCount * 4);
 		}
 		
-		public Date getRawValueDate() {
-			return Specification.this.getRawValueDate(packetFieldSpec, packet.frameData, 0, packet.frameCount * 4);
-		}
-		
 		public String formatTextValue(Unit unit, Locale locale) {
 			return Specification.this.formatTextValueFromRawValue(packetFieldSpec, getRawValueDouble(), unit, locale);
+		}
+		
+		public EnumVariant getEnumVariant() {
+			Long rawValue = getRawValueLong();
+			EnumVariant enumVariant;
+			if (rawValue != null) {
+				enumVariant = packetFieldSpec.getEnumVariantForRawValue(rawValue.longValue());
+			} else {
+				enumVariant = null;
+			}
+			return enumVariant;
+		}
+		
+		public String formatText(Unit unit, Locale locale, Language language) {
+			EnumVariant enumVariant = getEnumVariant();
+			String result;
+			if (enumVariant != null) {
+				result = enumVariant.getText(language);
+			} else {
+				result = formatTextValue(unit, locale);
+			}
+			return result;
+		}
+		
+		public String formatText() {
+			return formatText(null, null, Language.En);
+		}
+		
+		public boolean isBooleanLikeEnum() {
+			PacketFieldSpec pfs = this.getPacketFieldSpec();
+			PacketTemplateFieldPart[] parts = pfs.getParts();
+			Enum enum_ = pfs.getEnum(); 
+			boolean isBitField = ((parts.length == 1) && (Integer.bitCount(parts [0].getMask()) == 1));
+			boolean isTwoVariantEnum = (enum_ != null) && (enum_.getEnumVariants().length == 2);
+			return (isBitField && isTwoVariantEnum);			
 		}
 		
 	}
@@ -572,16 +603,16 @@ public class Specification {
 		
 		return result;
 	}
-    
+
 	/**
-	  * Get the list of known units.
-	  *
-	  * @return array of known Units.
-	  */
-	  public Unit[] getUnits() {
+	 * Get the list of known units.
+	 *
+	 * @return array of known Units.
+	 */
+	public Unit[] getUnits() {
 		return specificationFile.getUnits();
-	  }
-	
+	}
+
 	/**
 	 * Get optional raw value from `Packet` payload data as a Long.
 	 * 
@@ -636,43 +667,7 @@ public class Specification {
 		return rawValueDouble;
 	}
 
-	/**
-	 * Get optional raw value from `Packet` payload data as a Date.
-	 * 
-	 * @param pfs `PacketFieldSpec` instance of field to get value for.
-	 * @param buffer Byte array containing `Packet` payload data.
-	 * @param start Start index into the buffer.
-	 * @param length Length of the buffer.
-	 * @return The date object or `null` if the buffer was too small for a value or the packet field
-	 *         is not a DateTime, Time or WeekTime field
-	 */
-	public Date getRawValueDate(PacketFieldSpec pfs, byte[] buffer, int start, int length) {
-		Long rawValueLong = getRawValueLong(pfs, buffer, start, length);
-		Date result;
-		if (rawValueLong != null) {
-			Double rawValueDouble;
-			rawValueDouble = new Double(rawValueLong.doubleValue());
-			switch (pfs.getType()){
-			case DateTime:
-				result = new Date(Math.round(rawValueDouble + Specification.DATE_OFFSET) * 1000);
-				break;
-			case Time:
-				result = new Date(Math.round(rawValueDouble + Specification.TIME_OFFSET) * 60 * 1000);
-				break;
-			case WeekTime:
-				result = new Date(Math.round(rawValueDouble + Specification.WEEKTIME_OFFSET) * 60 * 1000);
-				break;
-			default:
-				result = null;
-				break;
-			}
-		} else {
-			result = null;
-		}
-		return result;
-	}
-
-    protected String formatTextValueFromRawValueInternal(double rawValue, Unit unit, Locale locale, Type rootType, int precision, Unit defaultUnit) {
+	protected String formatTextValueFromRawValueInternal(double rawValue, Unit unit, Locale locale, Type rootType, int precision, Unit defaultUnit) {
 		String unitText;
 		if (unit != null) {
 			unitText = unit.getUnitTextText();

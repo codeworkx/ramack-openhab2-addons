@@ -10,6 +10,7 @@ package org.openhab.binding.resol.handler;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -159,8 +160,10 @@ public class ResolThingHandler extends BaseThingHandler {
             return;
         }
         logger.trace("Set {}:{}:{} = {}", getThing().getUID().getId(), channelId, channel.getAcceptedItemType(), value);
-        this.updateState(channelId,
-                new DateTimeType(new SimpleDateFormat(DateTimeType.DATE_PATTERN_WITH_TZ_AND_MS_GENERAL).format(value)));
+        SimpleDateFormat s = new SimpleDateFormat(DateTimeType.DATE_PATTERN_WITH_TZ_AND_MS_GENERAL);
+        s.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        this.updateState(channelId, new DateTimeType(s.format(value)));
     }
 
     public void setChannelValue(String channelId, double value) {

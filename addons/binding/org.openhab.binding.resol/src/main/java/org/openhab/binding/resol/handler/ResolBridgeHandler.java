@@ -15,6 +15,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
@@ -229,7 +230,8 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                             PacketFieldValue[] pfvs = spec.getPacketFieldValuesForHeaders(new Packet[] { packet });
                             for (PacketFieldValue pfv : pfvs) {
                                 logger.trace("Id: {}, Name: {}, Raw: {}, Text: {}", pfv.getPacketFieldId(),
-                                        pfv.getName(), pfv.getRawValueDouble(), pfv.formatTextValue(null, null));
+                                        pfv.getName(), pfv.getRawValueDouble(),
+                                        pfv.formatTextValue(null, Locale.getDefault()));
                                 ResolThingHandler thingHandler = thingHandlerMap.get(thingType);
                                 if (thingHandler != null) {
                                     @NonNull
@@ -243,6 +245,8 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
 
                                     ChannelTypeUID channelTypeUID;
 
+                                    // TODO: use getEnumVariantForRawValue
+                                    // isBooleanLikeEnum
                                     if (pfv.getPacketFieldSpec().getUnit().getUnitId() >= 0) {
                                         channelTypeUID = new ChannelTypeUID(ResolBindingConstants.BINDING_ID,
                                                 pfv.getPacketFieldSpec().getUnit().getUnitCodeText());

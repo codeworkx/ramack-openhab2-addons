@@ -22,6 +22,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.smarthome.core.i18n.LocaleProvider;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.Channel;
 import org.eclipse.smarthome.core.thing.ChannelUID;
@@ -44,6 +45,7 @@ import de.resol.vbus.Packet;
 import de.resol.vbus.Specification;
 import de.resol.vbus.Specification.PacketFieldValue;
 import de.resol.vbus.SpecificationFile;
+import de.resol.vbus.SpecificationFile.Language;
 import de.resol.vbus.TcpDataSource;
 import de.resol.vbus.TcpDataSourceProvider;
 
@@ -57,6 +59,9 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
 
     private Logger logger = LoggerFactory.getLogger(ResolBridgeHandler.class);
 
+    private LocaleProvider localeProvider;
+    private Language lang;
+
     private String ipAddress;
     private String password;
     private int port;
@@ -66,9 +71,24 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
     private InputStream inStream;
     private boolean isConnected = false;
 
-    public ResolBridgeHandler(Bridge bridge) {
+    public ResolBridgeHandler(Bridge bridge, LocaleProvider localeProvider) {
         super(bridge);
         spec = Specification.getDefaultSpecification();
+        this.localeProvider = localeProvider;
+        if (localeProvider != null) {
+            // see https://github.com/danielwippermann/resol-vbus-java/issues/14 for improvements
+            Locale l = localeProvider.getLocale();
+            if (new Locale("en").getLanguage().equals(l.getLanguage())) {
+                lang = Language.En;
+            } else if (new Locale("de").getLanguage().equals(l.getLanguage())) {
+                lang = Language.De;
+            } else if (new Locale("fr").getLanguage().equals(l.getLanguage())) {
+                lang = Language.Fr;
+            }
+
+        } else {
+            lang = Language.En;
+        }
     }
 
     @Override
@@ -199,7 +219,8 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
 
                         @Override
                         public void packetReceived(Connection connection, Packet packet) {
-                            String thingType = spec.getSourceDeviceSpec(packet).getName();
+                            String thingType = spec.getSourceDeviceSpec(packet).getName(); // use En here
+
                             thingType = thingType.replace(" [", "-");
                             thingType = thingType.replace("]", "");
                             thingType = thingType.replace(" #", "-");
@@ -208,12 +229,14 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                             thingType = thingType.replaceAll("[^A-Za-z0-9_-]+", "_");
 
                             if (spec.getSourceDeviceSpec(packet).getPeerAddress() == 0x10) {
-                                logger.trace("Received Data from " + spec.getSourceDeviceSpec(packet).getName() + " (0x"
+                                logger.trace("Received Data from " + spec.getSourceDeviceSpec(packet).getName(lang)
+                                        + " (0x"
                                         + Integer.toHexString(spec.getSourceDeviceSpec(packet).getSelfAddress()) + "/0x"
                                         + Integer.toHexString(spec.getSourceDeviceSpec(packet).getPeerAddress()) + ")"
                                         + " naming it " + thingType);
                             } else {
-                                logger.trace("Ignoring Data from " + spec.getSourceDeviceSpec(packet).getName() + " (0x"
+                                logger.trace("Ignoring Data from " + spec.getSourceDeviceSpec(packet).getName(lang)
+                                        + " (0x"
                                         + Integer.toHexString(spec.getSourceDeviceSpec(packet).getSelfAddress()) + "/0x"
                                         + Integer.toHexString(spec.getSourceDeviceSpec(packet).getPeerAddress()) + ")"
                                         + " naming it " + thingType);
@@ -230,12 +253,12 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                             PacketFieldValue[] pfvs = spec.getPacketFieldValuesForHeaders(new Packet[] { packet });
                             for (PacketFieldValue pfv : pfvs) {
                                 logger.trace("Id: {}, Name: {}, Raw: {}, Text: {}", pfv.getPacketFieldId(),
-                                        pfv.getName(), pfv.getRawValueDouble(),
+                                        pfv.getName(lang), pfv.getRawValueDouble(),
                                         pfv.formatTextValue(null, Locale.getDefault()));
                                 ResolThingHandler thingHandler = thingHandlerMap.get(thingType);
                                 if (thingHandler != null) {
                                     @NonNull
-                                    String channelId = pfv.getName();
+                                    String channelId = pfv.getName(); // use english here
                                     channelId = channelId.replace(" [", "-");
                                     channelId = channelId.replace("]", "");
                                     channelId = channelId.replace("(", "-");
@@ -245,14 +268,21 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
 
                                     ChannelTypeUID channelTypeUID;
 
-                                    // TODO: use getEnumVariantForRawValue
-                                    // isBooleanLikeEnum
                                     if (pfv.getPacketFieldSpec().getUnit().getUnitId() >= 0) {
                                         channelTypeUID = new ChannelTypeUID(ResolBindingConstants.BINDING_ID,
                                                 pfv.getPacketFieldSpec().getUnit().getUnitCodeText());
                                         // TODO: add precision
+                                        // TODO: add special handling of unit percent as PercentType
                                     } else if (pfv.getPacketFieldSpec().getType() == SpecificationFile.Type.Number) {
-                                        channelTypeUID = new ChannelTypeUID(ResolBindingConstants.BINDING_ID, "None");
+                                        if (pfv.getEnumVariant() != null) {
+                                            // Do not auto-link the numeric value, if there is an enum for it
+                                            channelTypeUID = new ChannelTypeUID(ResolBindingConstants.BINDING_ID,
+                                                    "NoneHidden");
+                                        } else {
+                                            channelTypeUID = new ChannelTypeUID(ResolBindingConstants.BINDING_ID,
+                                                    "None");
+                                        }
+
                                     } else if (pfv.getPacketFieldSpec().getType() == SpecificationFile.Type.DateTime) {
                                         channelTypeUID = new ChannelTypeUID(ResolBindingConstants.BINDING_ID,
                                                 "DateTime");
@@ -290,24 +320,19 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                                         default:
                                             acceptedItemType = "String";
                                             break;
-
                                     }
-
                                     if (thing.getChannel(channelId) == null && pfv.getRawValueDouble() != null) {
-                                        if (pfv.getName().contains("date")) {
-                                            logger.trace("adding channel {} as {} to {}", pfv.getName(), channelId,
-                                                    thingHandler.getThing().getUID());
-                                        }
                                         ThingBuilder thingBuilder = thingHandler.editThing();
 
                                         ChannelUID channelUID = new ChannelUID(thing.getUID(), channelId);
                                         Channel channel = ChannelBuilder.create(channelUID, acceptedItemType)
-                                                .withType(channelTypeUID).withLabel(pfv.getName()).build();
+                                                .withType(channelTypeUID).withLabel(pfv.getName(lang)).build();
 
                                         thingBuilder.withChannel(channel).withLabel(thing.getLabel());
 
                                         thingHandler.updateThing(thingBuilder.build());
                                     }
+
                                     switch (pfv.getPacketFieldSpec().getType()) {
                                         case Number:
                                             Double dd = pfv.getRawValueDouble();
@@ -315,8 +340,8 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                                                 thingHandler.setChannelValue(channelId, dd.doubleValue());
                                             } else {
                                                 /*
-                                                 * field not available in this packet, e. g. old firmware version not
-                                                 * (yet) transmitting it
+                                                 * field not available in this packet, e. g. old firmware version
+                                                 * not (yet) transmitting it
                                                  */
                                             }
                                             break;
@@ -327,6 +352,26 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                                         case Time:
                                         default:
                                             thingHandler.setChannelValue(channelId, pfv.formatTextValue(null, null));
+                                    }
+
+                                    if (pfv.getEnumVariant() != null) {
+                                        // if we have an enum, we additionally add that as channel
+                                        String enumChannelId = channelId + "-str";
+                                        if (thing.getChannel(enumChannelId) == null) {
+                                            ChannelTypeUID enumChannelTypeUID = new ChannelTypeUID(
+                                                    ResolBindingConstants.BINDING_ID, "None");
+                                            ThingBuilder thingBuilder = thingHandler.editThing();
+
+                                            ChannelUID enumChannelUID = new ChannelUID(thing.getUID(), enumChannelId);
+                                            Channel channel = ChannelBuilder.create(enumChannelUID, "String")
+                                                    .withType(enumChannelTypeUID).withLabel(pfv.getName(lang)).build();
+
+                                            thingBuilder.withChannel(channel).withLabel(thing.getLabel());
+
+                                            thingHandler.updateThing(thingBuilder.build());
+                                        }
+
+                                        thingHandler.setChannelValue(enumChannelId, pfv.getEnumVariant().getText(lang));
                                     }
                                 } else {
                                     logger.trace("ThingHandler for {} not registered.", thingType);
@@ -382,7 +427,6 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
         port = configuration.port;
         refreshInterval = configuration.refreshInterval;
         password = configuration.password;
-        // TODO: check how OpenHab can be forced to ask for the password on bridge thing creation
         startAutomaticRefresh();
     }
 

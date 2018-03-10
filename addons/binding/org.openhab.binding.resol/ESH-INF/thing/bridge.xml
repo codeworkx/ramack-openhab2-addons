@@ -13,8 +13,7 @@
 			<parameter name="ipAddress" type="text" required="true">
 				<context>network-address</context>
 				<label>IP Address</label>
-				<description>The IP address of the of the VBus-LAN adapter. 
-				</description>
+				<description>The IP address of the of the VBus-LAN adapter.</description>
 			</parameter>
 			<parameter name="port" type="integer" required="false" min="1024"
 				max="49151">

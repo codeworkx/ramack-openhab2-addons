@@ -14,6 +14,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.config.discovery.DiscoveryService;
+import org.eclipse.smarthome.core.i18n.LocaleProvider;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
@@ -25,6 +26,7 @@ import org.openhab.binding.resol.handler.ResolBridgeHandler;
 import org.openhab.binding.resol.handler.ResolThingHandler;
 import org.openhab.binding.resol.internal.discovery.ResolDiscoveryService;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +42,17 @@ public class ResolHandlerFactory extends BaseThingHandlerFactory {
 
     private @NonNull Logger logger = LoggerFactory.getLogger(ResolHandlerFactory.class);
 
+    private @Nullable LocaleProvider localeProvider;
+
+    @Reference
+    protected void setLocaleProvider(final LocaleProvider localeProvider) {
+        this.localeProvider = localeProvider;
+    }
+
+    protected void unsetLocaleProvider(final LocaleProvider localeProvider) {
+        this.localeProvider = null;
+    }
+
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
         return ResolBindingConstants.SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID);
@@ -54,7 +67,7 @@ public class ResolHandlerFactory extends BaseThingHandlerFactory {
         }
 
         if (thingTypeUID.equals(ResolBindingConstants.THING_TYPE_UID_BRIDGE)) {
-            ResolBridgeHandler handler = new ResolBridgeHandler((Bridge) thing);
+            ResolBridgeHandler handler = new ResolBridgeHandler((Bridge) thing, localeProvider);
             registerThingDiscovery(handler);
             return handler;
         }

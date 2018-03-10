@@ -3,5 +3,6 @@
    <service>
       <provide interface="org.eclipse.smarthome.core.thing.binding.ThingHandlerFactory"/>
    </service>
+   <reference bind="setLocaleProvider" interface="org.eclipse.smarthome.core.i18n.LocaleProvider" name="LocaleProvider" unbind="unsetLocaleProvider"/>
    <implementation class="org.openhab.binding.resol.internal.ResolHandlerFactory"/>
 </scr:component>

@@ -19,6 +19,12 @@
         <state readOnly="true" />
     </channel-type>
 
+    <channel-type id="NoneHidden" advanced="true">
+        <item-type>String</item-type>
+        <label>Any</label>
+        <state readOnly="true" />
+    </channel-type>
+
     <channel-type id="DateTime">
         <item-type>DateTime</item-type>
         <label>date</label>

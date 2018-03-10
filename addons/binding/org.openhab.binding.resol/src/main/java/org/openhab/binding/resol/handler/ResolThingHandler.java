@@ -123,6 +123,7 @@ public class ResolThingHandler extends BaseThingHandler {
         }
 
     }
+    // TODO: add special handling of unit percent as PercentType
 
     public void setChannelValue(String channelId, @Nullable String value) {
         Channel channel = getThing().getChannel(channelId);
@@ -159,11 +160,13 @@ public class ResolThingHandler extends BaseThingHandler {
                     getThing().getUID().getId(), channelId, value.toString());
             return;
         }
-        logger.trace("Set {}:{}:{} = {}", getThing().getUID().getId(), channelId, channel.getAcceptedItemType(), value);
         SimpleDateFormat s = new SimpleDateFormat(DateTimeType.DATE_PATTERN_WITH_TZ_AND_MS_GENERAL);
         s.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String str = s.format(value);
 
-        this.updateState(channelId, new DateTimeType(s.format(value)));
+        logger.trace("Set {}:{}:{} = {}", getThing().getUID().getId(), channelId, channel.getAcceptedItemType(), str);
+
+        this.updateState(channelId, new DateTimeType(str));
     }
 
     public void setChannelValue(String channelId, double value) {

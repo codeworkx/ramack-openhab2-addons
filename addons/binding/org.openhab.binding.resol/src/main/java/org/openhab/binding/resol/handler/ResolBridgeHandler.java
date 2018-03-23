@@ -28,6 +28,7 @@ import org.eclipse.smarthome.core.thing.Channel;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
+import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.binding.BaseBridgeHandler;
 import org.eclipse.smarthome.core.thing.binding.builder.ChannelBuilder;
 import org.eclipse.smarthome.core.thing.binding.builder.ThingBuilder;
@@ -70,6 +71,7 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
     private PrintStream out;
     private InputStream inStream;
     private boolean isConnected = false;
+    private String unconnectedReason = "";
 
     public ResolBridgeHandler(Bridge bridge, LocaleProvider localeProvider) {
         super(bridge);
@@ -102,7 +104,7 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
         if (isConnected) {
             updateStatus(ThingStatus.ONLINE);
         } else {
-            updateStatus(ThingStatus.OFFLINE);
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, unconnectedReason);
         }
 
     }
@@ -214,6 +216,11 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                                     .equals(Connection.ConnectionState.CONNECTED));
                             logger.trace("Connection state changed to: {} isConnected = {}",
                                     tcpConnection.getConnectionState().toString(), isConnected);
+                            if (isConnected) {
+                                unconnectedReason = "";
+                            } else {
+                                unconnectedReason = "TCP Connection problem";
+                            }
                             updateStatus();
                         }
 
@@ -337,7 +344,11 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                                         case Number:
                                             Double dd = pfv.getRawValueDouble();
                                             if (dd != null) {
-                                                thingHandler.setChannelValue(channelId, dd.doubleValue());
+                                                if (isSpecialValue(dd)) {
+                                                    /* some error occurred in the measurement - ignore the value */
+                                                } else {
+                                                    thingHandler.setChannelValue(channelId, dd.doubleValue());
+                                                }
                                             } else {
                                                 /*
                                                  * field not available in this packet, e. g. old firmware version
@@ -385,20 +396,38 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                     tcpConnection.connect();
                     Thread.sleep(1000); // after a reconnect wait 1 sec
                     isConnected = (tcpConnection.getConnectionState().equals(Connection.ConnectionState.CONNECTED));
-                } catch (Exception e) {
+                } catch (IOException e) {
                     logger.trace("Connection failed", e);
-
+                    unconnectedReason = e.getMessage();
                     isConnected = false;
+                } catch (InterruptedException e) {
+                    isConnected = (tcpConnection.getConnectionState().equals(Connection.ConnectionState.CONNECTED));
+                } catch (Exception e) {
+                    isConnected = (tcpConnection.getConnectionState().equals(Connection.ConnectionState.CONNECTED));
+                    unconnectedReason = e.getMessage();
                 }
                 if (!isConnected) {
-                    logger.info("Cannot establish connection to {}", ipAddress);
+                    logger.info("Cannot establish connection to {} ({})", ipAddress, unconnectedReason);
                 } else {
-                    updateStatus();
+                    unconnectedReason = "";
                 }
+                updateStatus();
             }
         }
 
     };
+
+    /* check if the given value is a special one like 888.8 or 999.9 for shortcut or open load on a sensor wire */
+    private boolean isSpecialValue(Double dd) {
+        if (Math.abs(dd - 888.8) < 1) {
+            /* sensor wire broken or no sensor connected */
+            return true;
+        }
+        if (Math.abs(dd - 999.9) < 1) {
+            return true;
+        }
+        return false;
+    }
 
     private synchronized void startAutomaticRefresh() {
         if (pollingJob == null || pollingJob.isCancelled()) {
@@ -437,9 +466,11 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
         if (pollingJob != null && !pollingJob.isCancelled()) {
             pollingJob.cancel(true);
             try {
-                tcpConnection.disconnect();
+                if (tcpConnection != null) {
+                    tcpConnection.disconnect();
+                }
             } catch (IOException ioe) {
-                // we don't care
+                // we don't care here
             }
             pollingJob = null;
         }

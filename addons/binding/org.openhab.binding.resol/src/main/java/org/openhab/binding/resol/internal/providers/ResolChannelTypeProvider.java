@@ -3,7 +3,6 @@
  */
 package org.openhab.binding.resol.internal.providers;
 
-import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
@@ -41,9 +40,8 @@ public class ResolChannelTypeProvider implements ChannelTypeProvider {
             int precision = 1; // TODO pfv.getPacketFieldSpec().getPrecision();
             if (u.getUnitId() >= 0) {
                 ChannelType c = new ChannelType(channelTypeUID, false, "Number", u.getUnitFamily().toString(),
-                        u.getUnitFamily().toString(), null, null,
-                        new StateDescription(null, null, new BigDecimal(1).scaleByPowerOfTen(-precision),
-                                "%." + precision + "f" + u.getUnitTextText().replace("%", "%%"), true, null),
+                        u.getUnitFamily().toString(), null, null, new StateDescription(null, null, null,
+                                "%." + precision + "f " + u.getUnitTextText().replace("%", "%%"), true, null),
                         null);
                 channelTypes.put(channelTypeUID, c);
             }

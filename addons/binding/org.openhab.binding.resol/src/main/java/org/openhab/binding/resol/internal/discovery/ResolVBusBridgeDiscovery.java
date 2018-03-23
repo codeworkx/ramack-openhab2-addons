@@ -66,12 +66,12 @@ public class ResolVBusBridgeDiscovery extends AbstractDiscoveryService {
                     TcpDataSource dsWithInfo;
                     try {
                         dsWithInfo = TcpDataSourceProvider.fetchInformation(address, 1500);
-                        logger.trace("Discovered Resol VBus-LAN Adapter @{} {} ({})", addressId,
+                        logger.trace("Discovered Resol VBus-LAN interface @{} {} ({})", addressId,
                                 dsWithInfo.getDeviceName(), dsWithInfo.getSerial());
 
                         currentDataSourceById.put(addressId, dsWithInfo);
                         addAdapter(addressId, dsWithInfo);
-
+                        // TODO: add here the detection of Multi-Channel interfaces like DL3
                     } catch (IOException ex) {
                         /* address is no valid adapter */
                     }

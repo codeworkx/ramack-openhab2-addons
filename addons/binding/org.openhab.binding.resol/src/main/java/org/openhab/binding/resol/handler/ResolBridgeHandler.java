@@ -78,15 +78,8 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
         spec = Specification.getDefaultSpecification();
         this.localeProvider = localeProvider;
         if (localeProvider != null) {
-            // see https://github.com/danielwippermann/resol-vbus-java/issues/14 for improvements
             Locale l = localeProvider.getLocale();
-            if (new Locale("en").getLanguage().equals(l.getLanguage())) {
-                lang = Language.En;
-            } else if (new Locale("de").getLanguage().equals(l.getLanguage())) {
-                lang = Language.De;
-            } else if (new Locale("fr").getLanguage().equals(l.getLanguage())) {
-                lang = Language.Fr;
-            }
+            lang = SpecificationFile.getLanguageForLocale(l);
 
         } else {
             lang = Language.En;
@@ -130,10 +123,10 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
 
     // Handles Thing discovery
 
-    private void createThing(String thingType, String thingID) {
+    private void createThing(String thingType, String thingID, String name) {
         logger.trace("Create thing Type='{}' id='{}'", thingType, thingID);
         if (discoveryService != null) {
-            discoveryService.addResolThing(thingType, thingID);
+            discoveryService.addResolThing(thingType, thingID, name);
         }
     }
 
@@ -253,7 +246,8 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                             // TODO: if the thing gets deleted, we should also remove it from this list...
                             if (!availableDevices.contains(thingType)) {
                                 // register new device
-                                createThing(ResolBindingConstants.THING_ID_DEVICE, thingType);
+                                createThing(ResolBindingConstants.THING_ID_DEVICE, thingType,
+                                        spec.getSourceDeviceSpec(packet).getName(lang));
                                 availableDevices.add(thingType);
                             }
 

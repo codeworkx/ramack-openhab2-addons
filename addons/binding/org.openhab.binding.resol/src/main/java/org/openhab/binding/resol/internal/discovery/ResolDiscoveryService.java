@@ -38,7 +38,7 @@ public class ResolDiscoveryService extends AbstractDiscoveryService {
         this.resolBridgeHandler = resolBridgeHandler;
     }
 
-    private void addThing(ThingUID bridgeUID, String thingType, String type) {
+    private void addThing(ThingUID bridgeUID, String thingType, String type, String name) {
         logger.trace("Adding new Resol thing: {}", type);
         ThingUID thingUID = null;
         switch (thingType) {
@@ -55,7 +55,7 @@ public class ResolDiscoveryService extends AbstractDiscoveryService {
             properties.put("type", type);
 
             DiscoveryResult discoveryResult = DiscoveryResultBuilder.create(thingUID).withBridge(bridgeUID)
-                    .withProperties(properties).withLabel(type).build();
+                    .withProperties(properties).withLabel(name).build();
             logger.trace("call register: {} label: {}", discoveryResult.getBindingId(), discoveryResult.getLabel());
             thingDiscovered(discoveryResult);
         } else {
@@ -64,9 +64,9 @@ public class ResolDiscoveryService extends AbstractDiscoveryService {
 
     }
 
-    public void addResolThing(String thingType, String thingID) {
+    public void addResolThing(String thingType, String thingID, String name) {
 
-        addThing(resolBridgeHandler.getThing().getUID(), thingType, thingID);
+        addThing(resolBridgeHandler.getThing().getUID(), thingType, thingID, name);
 
     }
 

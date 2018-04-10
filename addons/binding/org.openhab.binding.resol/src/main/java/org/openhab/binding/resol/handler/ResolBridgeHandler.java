@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2017 by the respective copyright holders.
+ * Copyright (c) 2010-2018 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -231,17 +231,17 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                             thingType = thingType.replaceAll("[^A-Za-z0-9_-]+", "_");
 
                             if (spec.getSourceDeviceSpec(packet).getPeerAddress() == 0x10) {
-                                logger.trace("Received Data from " + spec.getSourceDeviceSpec(packet).getName(lang)
-                                        + " (0x"
-                                        + Integer.toHexString(spec.getSourceDeviceSpec(packet).getSelfAddress()) + "/0x"
-                                        + Integer.toHexString(spec.getSourceDeviceSpec(packet).getPeerAddress()) + ")"
-                                        + " naming it " + thingType);
+                                logger.trace("Received Data from {} (0x{}/0x{}) naming it {}",
+                                        spec.getSourceDeviceSpec(packet).getName(lang),
+                                        Integer.toHexString(spec.getSourceDeviceSpec(packet).getSelfAddress()),
+                                        Integer.toHexString(spec.getSourceDeviceSpec(packet).getPeerAddress()),
+                                        thingType);
                             } else {
-                                logger.trace("Ignoring Data from " + spec.getSourceDeviceSpec(packet).getName(lang)
-                                        + " (0x"
-                                        + Integer.toHexString(spec.getSourceDeviceSpec(packet).getSelfAddress()) + "/0x"
-                                        + Integer.toHexString(spec.getSourceDeviceSpec(packet).getPeerAddress()) + ")"
-                                        + " naming it " + thingType);
+                                logger.trace("Ignoring Data from {} (0x{}/0x{}) naming it {}",
+                                        spec.getSourceDeviceSpec(packet).getName(lang),
+                                        Integer.toHexString(spec.getSourceDeviceSpec(packet).getSelfAddress()),
+                                        Integer.toHexString(spec.getSourceDeviceSpec(packet).getPeerAddress()),
+                                        thingType);
                                 return;
                             }
 

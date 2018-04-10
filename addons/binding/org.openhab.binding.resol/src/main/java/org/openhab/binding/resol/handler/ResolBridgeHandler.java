@@ -416,11 +416,12 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
 
     /* check if the given value is a special one like 888.8 or 999.9 for shortcut or open load on a sensor wire */
     private boolean isSpecialValue(Double dd) {
-        if (Math.abs(dd - 888.8) < 1) {
-            /* sensor wire broken or no sensor connected */
+        if ((Math.abs(dd - 888.8) < 1) || (Math.abs(dd - (-888.8)) < 1)) {
+            /* value out of range */
             return true;
         }
         if (Math.abs(dd - 999.9) < 1) {
+            /* sensor not reachable */
             return true;
         }
         return false;

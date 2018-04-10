@@ -62,6 +62,7 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
 
     private LocaleProvider localeProvider;
     private Language lang;
+    private Locale locale;
 
     private String ipAddress;
     private String password;
@@ -78,10 +79,11 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
         spec = Specification.getDefaultSpecification();
         this.localeProvider = localeProvider;
         if (localeProvider != null) {
-            Locale l = localeProvider.getLocale();
-            lang = SpecificationFile.getLanguageForLocale(l);
+            locale = localeProvider.getLocale();
+            lang = SpecificationFile.getLanguageForLocale(locale);
 
         } else {
+            locale = Locale.getDefault();
             lang = Language.En;
         }
     }
@@ -356,7 +358,8 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                                         case WeekTime:
                                         case Time:
                                         default:
-                                            thingHandler.setChannelValue(channelId, pfv.formatTextValue(null, null));
+                                            thingHandler.setChannelValue(channelId,
+                                                    pfv.formatTextValue(pfv.getPacketFieldSpec().getUnit(), locale));
                                     }
 
                                     if (pfv.getEnumVariant() != null) {

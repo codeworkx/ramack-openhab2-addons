@@ -9,7 +9,7 @@ Many Resol Controllers and Modules like WMZ heat meters, HKM Heating circuit ext
 
 ## Discovery
 
-Discovery is supported for VBus-LAN adapters , but it should also work for data loggers providing the same IP interface as the VBusLAN-Adapter. 
+Discovery is tested for VBus-LAN adapters DL2 and DL3 devices, it should also work for other devices providing a live data port.
 
 ## Binding Configuration
 

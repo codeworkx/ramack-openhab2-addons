@@ -2,9 +2,11 @@
 
 Resol Binding connects to Solar and System Controllers of RESOL - Elektronische Regelungen GmbH, also including branded versions from Viessmann, SOLEX, COSMO, SOLTEX, DeDietrich and many more.
 
+This binding is based on and includes the [Resol-VBUS-Java library](https://github.com/danielwippermann/resol-vbus-java), developed by Daniel Wippermann.
+
 ## Supported Things
 
-VBusLAN-Bridge, DataLogger DL2 and DL3 as interface between LAN and Resol VBus
+VBusLAN-Bridge, DataLogger DL2 and DL3 as interface between LAN and Resol VBus. On the DL3 currently there is only the first VBUS channel supported and the sensors directly connected tot he DL3 are not accessible via this binding.
 Many Resol Controllers and Modules like WMZ heat meters, HKM Heating circuit extensions etc.
 
 ## Discovery
@@ -13,48 +15,34 @@ Discovery is tested for VBus-LAN adapters DL2 and DL3 devices, it should also wo
 
 ## Binding Configuration
 
-_If your binding requires or supports general configuration settings, please create a folder ```cfg``` and place the configuration file ```<bindingId>.cfg``` inside it. In this section, you should link to this file and provide some information about the options. The file could e.g. look like:_
-
-```
-# Configuration for the Philips Hue Binding
-#
-# Default secret key for the pairing of the Philips Hue Bridge.
-# It has to be between 10-40 (alphanumeric) characters 
-# This may be changed by the user for security reasons.
-secret=EclipseSmartHome
-```
-
-_Note that it is planned to generate some part of this based on the information that is available within ```ESH-INF/binding``` of your binding._
-
-_If your binding does not offer any generic configurations, you can remove this section completely._
+The Resol binding doesn't need any form of configuration in files.
 
 ## Thing Configuration
 
-Password for the VBusLAN needs to be configured!
-_Describe what is needed to manually configure a thing, either through the (Paper) UI or via a thing-file. This should be mainly about its mandatory and optional configuration parameters. A short example entry for a thing file can help!_
+There are different things supported. The most important and common thing is the VBUS Bridge, the device connecting your VBUS to 
+Password for the VBusLAN needs to be configured! The other options normally don't need to be touched.
 
-_Note that it is planned to generate some part of this based on the XML files within ```ESH-INF/thing``` of your binding._
+For the Resol controller things nothing is configurable at the time of writing.
 
 ## Channels
 
-Channels are dynamically created dependent on the devices connected to the VBus. So far only reading is supported.
+Channels are dynamically created dependent on the devices connected to the VBus. So far only reading is supported. The classical channels are for temerature sensors and the like, but also relais outputs with the output level (0-100%) are visible as numerical values with the corresponding unit. Some datapoints have an enumeration type and are available in two versions, a numerical and a textual channel. Examples are Error mask, which is a number for the complete mask and each bit is available as single string channel, or the operation state of a heating circuit. In those cases the numerical version is hidden and have to be view explicitly if needed, while the string representation has an "-str" suffix in the name.
+
+String values are localized as far as possible, but only French, German and English are supported by the underlaying library which is based on the vbus-specification file from Resol.
+
+Other types are most likely handled as strings and.
 
 ## Full Example
 
-_Provide a full usage example based on textual configuration files (*.things, *.items, *.sitemap)._
+For a full description of the setup and examples follow the instructions in the [Getting Started](doc/GETTING_STARTED.md) document.
 
-## TODO
-see tickets
-- cleanup unit, unitfamily and type handling for channels
-- check timezones of date and time fields
-- stop interpretation / close TCP connection to VBus adapter on dispose of the BridgeHandler
-  * check if on thing removal (dispose) the BridgeHandler does not try to update it
-- check whether updates shall only be called on data change
-- cleanup this README
+## Debugging
 
-- check whether there is a useful way to support/utilize events
+Log TRACE
 
-- test with multiple VBus bridges
-- remove adapterSerial from Bridge configuration parameters?
+## Status
+So far I consider this binding as public beta. I made it available via Eclipse IoT Marketplace, but sooner or later I target to create a PR against the openhab2-addons repository to have it included there.
 
-- Add NOTICE file https://www.eclipse.org/projects/handbook/#legaldoc
+### Open Issues
+
+Open issues are tracked via [tickets on github](https://github.com/ramack/openhab2-addons/issues). Please add new problems there and also add comments to existing ones.

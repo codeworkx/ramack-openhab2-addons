@@ -17,10 +17,12 @@ Download the latest jar from the [github repository](https://github.com/ramack/o
 # Add and configure a VBUS Bridge
 
 Select 'Configuration/Things' and press the + for adding new things.
+
 ![Add Thing](images/add_thing.png)
 
+
 Select 'Resol Binding'
-![Add Resol Binding](images/add_resol.png)
+  ![Add Resol Binding](images/add_resol.png)
 
 Wait...
 and if everything goes smooth you should get the popup that a new thing was added to your inbox.

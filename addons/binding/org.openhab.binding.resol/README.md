@@ -38,7 +38,14 @@ For a full description of the setup and examples follow the instructions in the 
 
 ## Debugging
 
-Log TRACE
+If something goes not as it should, try to enable the TRACE logging for the resol binding, by adding to /var/lib/openhab2/etc/org.ops4j.pax.logging.cfg
+
+ # Resol logger
+ log4j2.logger.resol.name = org.openhab.binding.resol
+ log4j2.logger.resol.level = TRACE # set back to INFO or WARN after you made it work
+ log4j2.logger.resol.appenderRefs = stdout
+ log4j2.logger.resol.appenderRef.stdout.ref = STDOUT
+
 
 ## Status
 So far I consider this binding as public beta. I made it available via Eclipse IoT Marketplace, but sooner or later I target to create a PR against the openhab2-addons repository to have it included there.

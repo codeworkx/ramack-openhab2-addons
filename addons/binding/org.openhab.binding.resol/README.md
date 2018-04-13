@@ -6,8 +6,9 @@ This binding is based on and includes the [Resol-VBUS-Java library](https://gith
 
 ## Supported Things
 
-VBusLAN-Bridge, DataLogger DL2 and DL3 as interface between LAN and Resol VBus. On the DL3 currently there is only the first VBUS channel supported and the sensors directly connected tot he DL3 are not accessible via this binding.
-Many Resol Controllers and Modules like WMZ heat meters, HKM Heating circuit extensions etc.
+VBusLAN-Bridge, DataLogger DL2 and DL3 as a live data interface between LAN and Resol VBus. On the DL3 currently there is only the first VBUS channel supported and the sensors directly connected tot he DL3 are not accessible via this binding.
+
+On top of the bridge devices, which enables access to the VBUS many, if not all, Resol Controllers and Modules like WMZ heat meters, HKM Heating circuit extensions etc. are supported including branded versions from different suppliers.
 
 ## Discovery
 

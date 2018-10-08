@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2017 by the respective copyright holders.
+ * Copyright (c) 2010-2018 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -13,7 +13,6 @@ import static org.openhab.binding.netatmo.internal.ChannelTypeUtils.*;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.types.State;
 import org.openhab.binding.netatmo.handler.NetatmoDeviceHandler;
@@ -41,10 +40,8 @@ public class NAMainHandler extends NetatmoDeviceHandler<NAMain> {
         NAMain result = null;
         NAStationDataBody stationDataBody = getBridgeHandler().getStationsDataBody(getId());
         if (stationDataBody != null) {
-            userAdministrative = stationDataBody.getUser().getAdministrative();
-
             result = stationDataBody.getDevices().stream().filter(device -> device.getId().equalsIgnoreCase(getId()))
-                    .findFirst().get();
+                    .findFirst().orElse(null);
             if (result != null) {
                 result.getModules().forEach(child -> childs.put(child.getId(), child));
             }
@@ -53,28 +50,33 @@ public class NAMainHandler extends NetatmoDeviceHandler<NAMain> {
     }
 
     @Override
+    protected void updateProperties(NAMain deviceData) {
+        updateProperties(deviceData.getFirmware(), deviceData.getType());
+    }
+
+    @Override
     protected State getNAThingProperty(String channelId) {
         if (device != null) {
             NADashboardData dashboardData = device.getDashboardData();
             switch (channelId) {
                 case CHANNEL_CO2:
-                    return toDecimalType(dashboardData.getCO2());
+                    return toQuantityType(dashboardData.getCO2(), API_CO2_UNIT);
                 case CHANNEL_TEMPERATURE:
-                    return toDecimalType(dashboardData.getTemperature());
+                    return toQuantityType(dashboardData.getTemperature(), API_TEMPERATURE_UNIT);
                 case CHANNEL_MIN_TEMP:
-                    return toDecimalType(dashboardData.getMinTemp());
+                    return toQuantityType(dashboardData.getMinTemp(), API_TEMPERATURE_UNIT);
                 case CHANNEL_MAX_TEMP:
-                    return toDecimalType(dashboardData.getMaxTemp());
+                    return toQuantityType(dashboardData.getMaxTemp(), API_TEMPERATURE_UNIT);
                 case CHANNEL_TEMP_TREND:
                     return toStringType(dashboardData.getTempTrend());
                 case CHANNEL_NOISE:
-                    return toDecimalType(dashboardData.getNoise());
+                    return toQuantityType(dashboardData.getNoise(), API_NOISE_UNIT);
                 case CHANNEL_PRESSURE:
-                    return toDecimalType(dashboardData.getPressure());
+                    return toQuantityType(dashboardData.getPressure(), API_PRESSURE_UNIT);
                 case CHANNEL_PRESS_TREND:
                     return toStringType(dashboardData.getPressureTrend());
                 case CHANNEL_ABSOLUTE_PRESSURE:
-                    return toDecimalType(dashboardData.getAbsolutePressure());
+                    return toQuantityType(dashboardData.getAbsolutePressure(), API_PRESSURE_UNIT);
                 case CHANNEL_TIMEUTC:
                     return toDateTimeType(dashboardData.getTimeUtc());
                 case CHANNEL_DATE_MIN_TEMP:
@@ -82,24 +84,23 @@ public class NAMainHandler extends NetatmoDeviceHandler<NAMain> {
                 case CHANNEL_DATE_MAX_TEMP:
                     return toDateTimeType(dashboardData.getDateMaxTemp());
                 case CHANNEL_HUMIDITY:
-                    return toDecimalType(dashboardData.getHumidity());
+                    return toQuantityType(dashboardData.getHumidity(), API_HUMIDITY_UNIT);
                 case CHANNEL_HUMIDEX:
                     return toDecimalType(
                             WeatherUtils.getHumidex(dashboardData.getTemperature(), dashboardData.getHumidity()));
                 case CHANNEL_HEATINDEX:
-                    return toDecimalType(
-                            WeatherUtils.getHeatIndex(dashboardData.getTemperature(), dashboardData.getHumidity()));
+                    return toQuantityType(
+                            WeatherUtils.getHeatIndex(dashboardData.getTemperature(), dashboardData.getHumidity()),
+                            API_TEMPERATURE_UNIT);
                 case CHANNEL_DEWPOINT:
-                    return toDecimalType(
-                            WeatherUtils.getDewPoint(dashboardData.getTemperature(), dashboardData.getHumidity()));
+                    return toQuantityType(
+                            WeatherUtils.getDewPoint(dashboardData.getTemperature(), dashboardData.getHumidity()),
+                            API_TEMPERATURE_UNIT);
                 case CHANNEL_DEWPOINTDEP:
-                    Double dewpoint = WeatherUtils.getDewPoint(dashboardData.getTemperature(),
+                    Double dewPoint = WeatherUtils.getDewPoint(dashboardData.getTemperature(),
                             dashboardData.getHumidity());
-                    return toDecimalType(WeatherUtils.getDewPointDep(dashboardData.getTemperature(), dewpoint));
-                case CHANNEL_WIND_UNIT:
-                    return new DecimalType(userAdministrative.getWindunit());
-                case CHANNEL_PRESSURE_UNIT:
-                    return new DecimalType(userAdministrative.getPressureunit());
+                    return toQuantityType(WeatherUtils.getDewPointDep(dashboardData.getTemperature(), dewPoint),
+                            API_TEMPERATURE_UNIT);
             }
         }
         return super.getNAThingProperty(channelId);

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2017 by the respective copyright holders.
+ * Copyright (c) 2010-2018 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -8,21 +8,16 @@
  */
 package org.openhab.binding.nest.internal.data;
 
-import com.google.gson.annotations.SerializedName;
-
 /**
  * The data of Nest API errors.
  *
  * @author Wouter Born - Improve exception handling
  */
 public class ErrorData {
-    @SerializedName("error")
+
     private String error;
-    @SerializedName("type")
     private String type;
-    @SerializedName("message")
     private String message;
-    @SerializedName("instance")
     private String instance;
 
     public String getError() {

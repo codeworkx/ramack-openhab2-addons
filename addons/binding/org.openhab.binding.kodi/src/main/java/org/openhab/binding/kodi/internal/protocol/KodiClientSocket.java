@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2017 by the respective copyright holders.
+ * Copyright (c) 2010-2018 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -8,6 +8,7 @@
  */
 package org.openhab.binding.kodi.internal.protocol;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
@@ -134,7 +135,6 @@ public class KodiClientSocket {
             logger.debug("Message received from server: {}", message);
             final JsonObject json = parser.parse(message).getAsJsonObject();
             if (json.has("id")) {
-                logger.debug("Response received from server: {}", json);
                 int messageId = json.get("id").getAsInt();
                 if (messageId == nextMessageId - 1) {
                     commandResponse = json;
@@ -172,12 +172,12 @@ public class KodiClientSocket {
         }
     }
 
-    private void sendMessage(String str) throws Exception {
+    private void sendMessage(String str) throws IOException {
         if (isConnected()) {
             logger.debug("send message: {}", str);
             session.getRemote().sendString(str);
         } else {
-            throw new Exception("socket not initialized");
+            throw new IOException("socket not initialized");
         }
     }
 

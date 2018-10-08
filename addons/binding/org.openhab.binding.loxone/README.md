@@ -1,7 +1,7 @@
 # Loxone Binding
 
 This binding integrates [Loxone Miniserver](https://www.loxone.com/enen/products/miniserver-extensions/) with [openHAB](http://www.openhab.org/).
-Miniserver is represented as a [Thing](http://docs.openhab.org/configuration/things.html). Miniserver controls, that are visible in the Loxone [UI](https://www.loxone.com/enen/kb/user-interface-configuration/), are exposed as openHAB channels.
+Miniserver is represented as a [Thing](https://www.openhab.org/docs/configuration/things.html). Miniserver controls, that are visible in the Loxone [UI](https://www.loxone.com/enen/kb/user-interface-configuration/), are exposed as openHAB channels.
 
 ## Features
 
@@ -9,10 +9,12 @@ The following features are currently supported:
 
 *   [Discovery](https://en.wikipedia.org/wiki/Simple_Service_Discovery_Protocol) of Miniservers available on the local network
 *   Creation of channels for Loxone controls that are exposed in the Loxone [UI](https://www.loxone.com/enen/kb/user-interface-configuration/)
-*   Tagging of channels and [items](http://docs.openhab.org/configuration/items.html) with tags that can be recognized by [Alexa](https://en.wikipedia.org/wiki/Amazon_Alexa) openHAB [skill](https://www.amazon.com/openHAB-Foundation/dp/B01MTY7Z5L), so voice can be used to command Loxone controls
+*   Tagging of channels and [items](https://www.openhab.org/docs/configuration/items.html) with tags that can be recognized by [Alexa](https://en.wikipedia.org/wiki/Amazon_Alexa) openHAB [skill](https://www.amazon.com/openHAB-Foundation/dp/B01MTY7Z5L), so voice can be used to command Loxone controls
 *   Management of a Websocket connection to the Miniserver and updating Thing status accordingly
 *   Updates of openHAB channel's state in runtime according to control's state changes on the Miniserver
 *   Passing channel commands to the Miniserver's controls
+*   Hash-based and token-based authentication methods
+*    Command encryption and response decryption
 
 ## Things
 
@@ -29,7 +31,7 @@ Please set them manually in Thing configuration after you add a new Miniserver T
 
 ### Manual configuration
 
-As an alternative to the automatic discovery process, Miniservers can be configured manually, through an entry in [.things file](http://docs.openhab.org/configuration/things.html#defining-things-using-files).
+As an alternative to the automatic discovery process, Miniservers can be configured manually, through an entry in [.things file](https://www.openhab.org/docs/configuration/things.html#defining-things-using-files).
 The entry should have the following syntax:
 
 `loxone:miniserver:<thing-id> [ user="<user>", password="<password>", host="<host>", port=<port>, ... ]`
@@ -56,11 +58,13 @@ There can be following reasons why Miniserver status is `OFFLINE`:
 
 *   __Configuration Error__
     *   _Unknown host_
-    *   Miniserver host/ip address can't be resolved. No connection attempt will be made.
-    *   _User not authorized_
+        *   Miniserver host/ip address can't be resolved. No connection attempt will be made.
+    *   _User authentication error_
         *   Invalid user name or password or user not authorized to connect to the Miniserver. Binding will make another attempt to connect after some time.
     *   _Too many failed login attempts - stopped trying_
         *   Miniserver locked out user for too many failed login attempts. In this case binding will stop trying to connect to the Miniserver. A new connection will be attempted only when user corrects user name or password in the configuration parameters.
+    *  _Enter password to generate a new token_
+        * Authentication using stored token failed - either token is wrong or it. A password must be reentered in the binding settings to acquire a new token.
     *   _Internal error_
         *   Probably a code defect, collect debug data and submit an issue. Binding will try to reconnect, but with unknown chance for success.
     *   _Other_
@@ -77,12 +81,30 @@ There can be following reasons why Miniserver status is `OFFLINE`:
     *   _Other_
         *   An exception occured and its details will be displayed
 
+### Security
+
+The binding supports the following authentication methods, which are selected automatically based on the firmware version. They can be also chosen manually in the advanced settings.
+
+| Method      | Miniserver Firmware | Authentication                                                                 | Encryption | Requirements                                          |
+|-------------|---------------------|--------------------------------------------------------------------------------|------------|-------------------------------------------------------|
+| Hash-based  | 8.x                 | HMAC-SHA1 hash on user and password                                            | None       | None                                                  |
+| Token-based | 9.x                 | Token acquired on the first connection and used later instead of the password. | AES-256    | JRE must have unrestricted security policy configured |
+
+For the token-based authentication, the password is required only for the first login and acquiring the token. After the token is acquired, the password is cleared in the binding configuration. 
+
+The acquired token will remain active for several weeks following the last succesful authentication with this token. If the connection is not established used during that period and the token expires, a user password has to be re-entered in the binding settings to acquire a new token.
+
+In case a websocket connection to the Miniserver remains active for the whole duration of the token's life span, the binding will refresh the token one day before token expiration, without the need of providing the password.
+
+
+A method to enable unrestricted security policy depends on the JRE version and vendor, some examples can be found [here](https://www.petefreitag.com/item/844.cfm) and [here](https://stackoverflow.com/questions/41580489/how-to-install-unlimited-strength-jurisdiction-policy-files).
+
 ## Channels
 
 This binding creates channels for controls that are [used in Loxone's user interface](https://www.loxone.com/enen/kb/user-interface-configuration/).
 Currently supported controls are presented in the table below.
 
-| [Loxone API Control](https://www.loxone.com/enen/kb/api/) | Loxone Block-Functions                                                                                                                                                                                                                                                                                                    | [Item Types](http://docs.openhab.org/concepts/items.html) | Supported Commands                                                                                                           |
+| [Loxone API Control](https://www.loxone.com/enen/kb/api/) | Loxone Block-Functions                                                                                                                                                                                                                                                                                                    | [Item Types](https://www.openhab.org/docs/concepts/items.html) | Supported Commands                                                                                                           |
 |-----------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
 | Dimmer                                                    | [Dimmer](https://www.loxone.com/enen/kb/dimmer/)                                                                                                                                                                                                                                                                          | `Dimmer`                                                  | `OnOffType.*`<br>`Percent`                                                                                                   |
 | InfoOnlyAnalog                                            | Analog [virtual inputs](https://www.loxone.com/enen/kb/virtual-inputs-outputs/) (virtual state)                                                                                                                                                                                                                           | `Number`                                                  | none (read-only value)                                                                                                       |
@@ -95,8 +117,7 @@ Currently supported controls are presented in the table below.
 | Radio                                                     | [Radio button 8x and 16x](https://www.loxone.com/enen/kb/radio-buttons/)                                                                                                                                                                                                                                                  | `Number`                                                  | `Decimal` (select output number 1-8/16 or 0 for all outputs off)<br>`OnOffType.OFF` (all outputs off)                        |
 | Switch                                                    | [Virtual inputs](https://www.loxone.com/enen/kb/virtual-inputs-outputs/) of switch type<br>[Push-button](https://www.loxone.com/enen/kb/push-button/)                                                                                                                                                                     | `Switch`                                                  | `OnOffType.*`                                                                                                                |
 | TextState                                                 | [State](https://www.loxone.com/enen/kb/state/)                                                                                                                                                                                                                                                                            | `String`                                                  | none (read-only value)                                                                                                       |
-| TimedSwitch                                               | [Stairwell light switch](https://www.loxone.com/enen/kb/stairwell-light-switch/) or [Multifunction switch](https://www.loxone.com/enen/kb/multifunction-switch/)                                                                                                                                                          | `Switch` <br> <br> `Number`                               | `OnOffType.*` (ON send pulse to Loxone) <br> <br> Read-only countdown value to off                                           |
-
+| TimedSwitch                                               | [Stairwell light switch](https://www.loxone.com/enen/kb/stairwell-light-switch/) or [Multifunction switch](https://www.loxone.com/enen/kb/multifunction-switch/)                                                                                                                                                          | `Switch` <br> <br> `Number`                               | `OnOffType.*` (ON sends pulse to Loxone) <br> <br> Read-only countdown value to off                                           |
 
 If your control is supported, but binding does not recognize it, please check if it is exposed in Loxone UI using [Loxone Config](https://www.loxone.com/enen/kb-cat/loxone-config/) application.
 
@@ -116,7 +137,13 @@ If a parameter is not explicitly defined, binding will use its default value.
 
 To define a parameter value in a .things file, please refer to it by parameter's ID, for example:
 
-        `keepAlivePeriod=120`
+        keepAlivePeriod=120
+
+### Security
+
+| ID           | Name                  | Values                                          | Default      | Description                                           |
+|--------------|-----------------------|-------------------------------------------------|--------------|-------------------------------------------------------|
+| `authMethod` | Authentication method | 0: Automatic<br>1: Hash-based<br>2: Token-based | 0: Automatic | A method used to authenticate user in the Miniserver. |
 
 ### Timeouts
 
@@ -140,13 +167,9 @@ They can be tuned, when abnormal behavior of the binding is observed, which can 
 | `maxBinMsgSize`  | Maximum binary message size (kB) | 0-100 MB | 3072 (3 MB) | For Websocket client, a maximum size of a binary message that can be received from the Miniserver. If you get communication errors with a message indicating there are too long binary messages received, you may need to adjust this parameter. |
 | `maxTextMsgSize` | Maximum text message size (kB)   | 0-100 MB | 512 KB      | For Websocket client, a maximum size of a text message that can be received from the Miniserver. If you get communication errors with a message indicating there are too long text messages received, you may need to adjust this parameter.     |
 
-
 ## Limitations
 
-*   As there is no push button item type in openHAB, Loxone's push button is an openHAB's switch, which always generates a short pulse on changing its state to on.
-If you use simple UI mode and framework generates items for you, switches for push buttons will still be toggle switches.
-To change it to the push button style, you have to create item manually with `autoupdate=false` parameter.
-An example of such item definition is given in the _Items_ section above.
+*   As there is no push button item type in openHAB, Loxone's push button is an openHAB's switch, which always generates a short pulse on changing its state to on. If you use simple UI mode and framework generates items for you, switches for push buttons will still be toggle switches. To change it to the push button style, you have to create item manually with `autoupdate=false` parameter. An example of such item definition is given in the _Items_ section above.
 
 ## Automatic Configuration Example
 
@@ -159,11 +182,11 @@ The simplest and quickest way of configuring a Loxone Miniserver with openHAB is
 *   Configure your Miniserver by editing Miniserver Thing in `Configuration/Things` page and providing user name and password.
 *   Miniserver Thing should go online. Channels and Items will be automatically created and configured.
 *   On the `Control` page, you can test Miniserver Items and interact with them.
-*   As the user interface, you may use [HABPanel](http://docs.openhab.org/addons/uis/habpanel/readme.html), where all Miniserver's items are ready for picking up, using entirely the graphical user interface.
+*   As the user interface, you may use [HABPanel](https://www.openhab.org/docs/configuration/habpanel.html), where all Miniserver's items are ready for picking up, using entirely the graphical user interface.
 
 ## Manual Configuration Example
 
-A more advanced setup requires manual creation and editing of openHAB configuration files, according to the instructions provided in [configuration user guide](http://docs.openhab.org/configuration/index.html).
+A more advanced setup requires manual creation and editing of openHAB configuration files, according to the instructions provided in [configuration user guide](https://www.openhab.org/docs/configuration/).
 In this example we will manually configure:
 
 *   A Miniserver with serial number 504F2414780F, available at IP 192.168.0.220 and with web services port 80
@@ -182,7 +205,7 @@ In this example we will manually configure:
 
 ```
 loxone:miniserver:504F2414780F [ user="kryten", password="jmc2017", host="192.168.0.220", port=80
-  ```
+```
 
 ### items/loxone.items:
 

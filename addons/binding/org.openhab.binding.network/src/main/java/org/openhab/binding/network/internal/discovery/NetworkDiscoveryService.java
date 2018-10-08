@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2017 by the respective copyright holders.
+ * Copyright (c) 2010-2018 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -46,7 +46,7 @@ import com.google.common.collect.Sets;
  * @author David Graeff - Rewritten
  * @author Marc Mettke - Initial contribution
  */
-@Component(immediate = true, service = DiscoveryService.class)
+@Component(service = DiscoveryService.class, immediate = true, configurationPid = "discovery.network")
 public class NetworkDiscoveryService extends AbstractDiscoveryService implements PresenceDetectionListener {
     static final int PING_TIMEOUT_IN_MS = 500;
     static final int MAXIMUM_IPS_PER_INTERFACE = 255;

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2017 by the respective copyright holders.
+ * Copyright (c) 2010-2018 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -12,7 +12,7 @@ package org.openhab.binding.kodi.internal.config;
  * Thing configuration from openHab.
  *
  * @author Christoph Weitkamp - Added channels for thumbnail and fanart
- * 
+ * @author Christoph Weitkamp - Improvements for playing audio notifications
  */
 public class KodiConfig {
     private String ipAddress;
@@ -21,6 +21,8 @@ public class KodiConfig {
     private String httpUser;
     private String httpPassword;
     private Integer refreshInterval;
+    private Integer notificationTimeout;
+    private Integer notificationVolume;
 
     public String getIpAddress() {
         return ipAddress;
@@ -68,5 +70,21 @@ public class KodiConfig {
 
     public void setRefreshInterval(Integer refreshInterval) {
         this.refreshInterval = refreshInterval;
+    }
+
+    public Integer getNotificationTimeout() {
+        return notificationTimeout;
+    }
+
+    public void setNotificationTimeout(Integer notificationTimeout) {
+        this.notificationTimeout = notificationTimeout;
+    }
+
+    public Integer getNotificationVolume() {
+        return notificationVolume;
+    }
+
+    public void setNotificationVolume(Integer notificationVolume) {
+        this.notificationVolume = notificationVolume;
     }
 }

@@ -14,6 +14,7 @@ Devices connected to Gardena Smart Home, currently:
 | watering_computer        | smart Water Control   |
 | sensor                   | smart Sensor          |
 | electronic_pressure_pump | smart Pressure Pump   |
+| power                    | smart Power Plug      |
 
 The schedules are not yet integrated!
 
@@ -39,19 +40,19 @@ There are several settings for an account:
 
 Minimal Thing configuration:
 
-```
+```java
 Bridge gardena:account:home [ email="...", password="..." ]
 ```
 
 Configuration with refresh:
 
-```
+```java
 Bridge gardena:account:home [ email="...", password="...", refresh=30 ]
 ```
 
 Configuration of multiple bridges:
 
-```
+```java
 Bridge gardena:account:home1 [ email="...", password="..." ]
 Bridge gardena:account:home2 [ email="...", password="..." ]
 ```
@@ -60,7 +61,7 @@ Once a connection to an account is established, connected Things are discovered 
 
 Alternatively, you can manually configure a Thing:
 
-```
+```perl
 Bridge gardena:account:home [ email="...", password="..." ]
 {
   Thing mower myMower [ deviceId="c81ad682-6e45-42ce-bed1-6b4eff5620c8" ]
@@ -71,7 +72,7 @@ Bridge gardena:account:home [ email="...", password="..." ]
 
 In the items file, you can link items to channels of your Things:
 
-```
+```java
 Number Battery_Level "Battery [%d %%]" {channel="gardena:mower:home:myMower:battery#level"}
 ```
 
@@ -79,36 +80,56 @@ Number Battery_Level "Battery [%d %%]" {channel="gardena:mower:home:myMower:batt
 
 You can send a REFRESH command to items linked to these Sensor channels:
 
-*   ambient_temperature#temperature
-*   soil_temperature#temperature
-*   humidity#humidity
-*   light#light
+- ambient_temperature#temperature
+- soil_temperature#temperature
+- humidity#humidity
+- light#light
 
 In the console:
 
-```
+```shell
 smarthome:send ITEM_NAME REFRESH
 ```
 
 In scripts:
 
-```
+```shell
 import org.eclipse.smarthome.core.types.RefreshType
 ...
 sendCommand(ITEM_NAME, RefreshType.REFRESH)
+```
+
+## Examples
+
+```shell
+// smart Water Control
+Switch  Watering_Valve      "Valve"             { channel="gardena:watering_computer:home:myvalve:outlet#valve_open"}
+Number  Watering_Duration   "Duration [%d min]" { channel="gardena:watering_computer:home:wasserhahn:outlet#button_manual_override_time"}
+
+// smart Power Plug
+String Power_Timer          "Power Timer [%s]"  { channel="gardena:power:home:myPowerplug:power#power_timer"}
+```
+
+```shell
+Watering_Valve.sendCommand(30) // 30 minutes
+Watering_Duration.sendCommand(ON)
+
+Power_Timer.sendCommand("on")
+Power_Timer.sendCommand("off")
+Power_Timer.sendCommand("180") // on for 180 seconds
 ```
 
 ### Debugging and Tracing
 
 If you want to see what's going on in the binding, switch the loglevel to TRACE in the Karaf console
 
-```
+```shell
 log:set TRACE org.openhab.binding.gardena
 ```
 
 Set the logging back to normal
 
-```
+```shell
 log:set INFO org.openhab.binding.gardena
 ```
 

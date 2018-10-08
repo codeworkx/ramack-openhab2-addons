@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2017 by the respective copyright holders.
+ * Copyright (c) 2010-2018 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  * @author Christian Fischer - Initial contribution
  * @author Hilbrand Bouwkamp - Complete make-over, reorganized code and code cleanup.
  */
-@Component(service = DiscoveryService.class, immediate = true)
+@Component(service = DiscoveryService.class, immediate = true, configurationPid = "discovery.tplinksmarthome")
 public class TPLinkSmartHomeDiscoveryService extends AbstractDiscoveryService {
 
     private static final String BROADCAST_IP = "255.255.255.255";

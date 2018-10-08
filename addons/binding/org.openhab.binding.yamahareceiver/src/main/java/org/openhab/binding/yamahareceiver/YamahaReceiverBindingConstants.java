@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2017 by the respective copyright holders.
+ * Copyright (c) 2010-2018 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -11,6 +11,7 @@ package org.openhab.binding.yamahareceiver;
 import java.util.Collections;
 import java.util.Set;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
 
 import com.google.common.collect.Sets;
@@ -22,6 +23,7 @@ import com.google.common.collect.Sets;
  * @author David Graeff <david.graeff@web.de>
  * @author Tomasz Maruszak - DAB support, Spotify support, refactoring
  */
+@NonNullByDefault
 public class YamahaReceiverBindingConstants {
     public static final String BINDING_ID = "yamahareceiver";
 
@@ -36,10 +38,10 @@ public class YamahaReceiverBindingConstants {
     public static final String CHANNEL_POWER = "power";
     public static final String CHANNEL_INPUT = "input";
     public static final String CHANNEL_INPUT_TYPE_AVAILABLE = "availableinput";
-    public static final String CHANNEL_INPUT_TYPE_DEFAULT = "defaultinput";
     public static final String CHANNEL_SURROUND = "surroundProgram";
     public static final String CHANNEL_VOLUME = "volume";
     public static final String CHANNEL_VOLUME_DB = "volumeDB";
+    public static final String CHANNEL_DIALOGUE_LEVEL = "dialogueLevel";
     public static final String CHANNEL_MUTE = "mute";
 
     // List of channel IDs for navigation control: Read/Write
@@ -67,7 +69,6 @@ public class YamahaReceiverBindingConstants {
 
     // List of channel IDs for playback control
     public static final String CHANNEL_PLAYBACK_PRESET = "preset"; // Preset number; RW
-    public static final String CHANNEL_PLAYBACK_PRESET_TYPE_DEFAULT = "defaultpreset"; // Preset number; RW
     public static final String CHANNEL_PLAYBACK_PRESET_TYPE_NAMED = "namedpreset"; // Preset number; RW
     public static final String CHANNEL_PLAYBACK = "playback"; // Play,Pause,Stop,FastFW,Rewind,Next,Previous.
                                                               // Will show the current state as String.
@@ -78,18 +79,17 @@ public class YamahaReceiverBindingConstants {
     public static final String CHANNEL_PLAYBACK_SONG = "playback_song";
     public static final String CHANNEL_PLAYBACK_SONG_IMAGE_URL = "playback_song_image_url";
 
-    public static final Set<String> CHANNELS_PLAYBACK = Sets.newHashSet(CHANNEL_PLAYBACK,
-            CHANNEL_PLAYBACK_STATION, CHANNEL_PLAYBACK_ARTIST, CHANNEL_PLAYBACK_ALBUM, CHANNEL_PLAYBACK_SONG,
-            CHANNEL_PLAYBACK_SONG_IMAGE_URL);
+    public static final Set<String> CHANNELS_PLAYBACK = Sets.newHashSet(CHANNEL_PLAYBACK, CHANNEL_PLAYBACK_STATION,
+            CHANNEL_PLAYBACK_ARTIST, CHANNEL_PLAYBACK_ALBUM, CHANNEL_PLAYBACK_SONG, CHANNEL_PLAYBACK_SONG_IMAGE_URL);
 
     public static final String UPNP_TYPE = "MediaRenderer";
     public static final String UPNP_MANUFACTURER = "YAMAHA";
 
-    public static final String CONFIG_REFRESH = "REFRESH_IN_SEC";
-    public static final String CONFIG_HOST_NAME = "HOST";
-    public static final String CONFIG_HOST_PORT = "PORT";
-    public static final String CONFIG_ZONE = "ZONE";
-    public static final String CONFIG_RELVOLUMECHANGE = "RELVOLUMECHANGE";
+
+    public static class Configs {
+        public static final String CONFIG_HOST_NAME = "host";
+        public static final String CONFIG_ZONE = "zone";
+    }
 
     public static final String PROPERTY_VERSION = "version";
     public static final String PROPERTY_ASSIGNED_NAME = "assigned_name";
@@ -113,13 +113,21 @@ public class YamahaReceiverBindingConstants {
     }
 
     /**
-     * The volume min and max is the same for all supported devices.
+     * Flags indicating if a feature is supported
      */
-    public static final int VOLUME_MIN = -80;
-
-    public static final int VOLUME_MAX = 12;
-
-    public static final int VOLUME_RANGE = -VOLUME_MIN + VOLUME_MAX;
+    public enum Feature {
+        DAB,
+        TUNER,
+        SPOTIFY,
+        BLUETOOTH,
+        AIRPLAY,
+        NET_RADIO,
+        USB,
+        /**
+         * Model HTR-xxxx has a Zone_2 concept but realized as an extension to Main_Zone
+         */
+        ZONE_B
+    }
 
     /** Retry time in ms if no response for menu navigation */
     public static final int MENU_RETRY_DELAY = 500;
@@ -128,9 +136,26 @@ public class YamahaReceiverBindingConstants {
     public static final int MENU_MAX_WAITING_TIME = 5000;
 
     // List of known inputs
-    public static final String INPUT_TUNER = "TUNER";
-    public static final String INPUT_SPOTIFY = "Spotify";
-    public static final String INPUT_BLUETOOTH = "Bluetooth";
+    public static class Inputs {
+        public static final String INPUT_TUNER = "TUNER";
+        public static final String INPUT_SPOTIFY = "Spotify";
+        public static final String INPUT_BLUETOOTH = "Bluetooth";
+        public static final String INPUT_NET_RADIO = "NET RADIO";
+        // Note (TM): We should only 'NET RADIO' (as the canonical input name), the NET_RADIO seems to be only used in the XML nodes when commands are sent.
+        public static final String INPUT_NET_RADIO_LEGACY = "NET_RADIO";
+        public static final String INPUT_MUSIC_CAST_LINK = "MusicCast Link";
+        public static final String INPUT_SERVER = "SERVER";
+        public static final String INPUT_USB = "USB";
+        public static final String INPUT_IPOD_USB = "iPOD_USB";
+        public static final String INPUT_DOCK = "DOCK";
+        public static final String INPUT_PC = "PC";
+        public static final String INPUT_NAPSTER = "Napster";
+        public static final String INPUT_PANDORA = "Pandora";
+        public static final String INPUT_SIRIUS = "SIRIUS";
+        public static final String INPUT_RHAPSODY = "Rhapsody";
+        public static final String INPUT_IPOD = "iPod";
+        public static final String INPUT_HD_RADIO = "HD_RADIO";
+    }
 
     /** Placeholder value that is used when the string channel value is not available */
     public static final String VALUE_NA = "N/A";

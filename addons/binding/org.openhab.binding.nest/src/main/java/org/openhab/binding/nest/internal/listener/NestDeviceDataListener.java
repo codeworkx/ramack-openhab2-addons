@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2017 by the respective copyright holders.
+ * Copyright (c) 2010-2018 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -8,6 +8,7 @@
  */
 package org.openhab.binding.nest.internal.listener;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.binding.nest.internal.data.Camera;
 import org.openhab.binding.nest.internal.data.SmokeDetector;
 import org.openhab.binding.nest.internal.data.Structure;
@@ -19,6 +20,7 @@ import org.openhab.binding.nest.internal.data.Thermostat;
  * @author David Bennett - Initial Contribution
  * @author Martin van Wingerden - Separated listeners to also use them for the handlers
  */
+@NonNullByDefault
 public interface NestDeviceDataListener {
 
     /**

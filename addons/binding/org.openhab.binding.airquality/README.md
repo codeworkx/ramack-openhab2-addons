@@ -16,8 +16,8 @@ Of course, you can add multiple Things, e.g. for measuring AQI for different loc
 
 ## Discovery
 
-There is no discovery implemented.
-You have to create your things manually.
+Local Air Quality can be autodiscovered based on system location.
+You'll have complete default configuration with your apiKey.
 
 ## Binding Configuration
 
@@ -34,50 +34,46 @@ The thing has a few configuration parameters:
 | stationId | Unique ID of the measuring station.                                     |
 | refresh   | Refresh interval in minutes. Optional, the default value is 60 minutes. |
 
-
 For the location parameter, the following syntax is allowed (comma separated latitude and longitude):
 
-```
+```java
 37.8,-122.4
 37.8255,-122.456
 ```
 
 If you always want to receive data from specific station and you know its unique ID, you can enter it instead of the coordinates.
 
-
 ## Channels
 
 The AirQuality information that is retrieved is available as these channels:
 
-
-| Channel ID      | Item Type | Description                                  |
-|-----------------|-----------|----------------------------------------------|
-| aqiLevel        | Number    | Air Quality Index                            |
-| aqiDescription  | String    | AQI Description                              |
-| locationName    | String    | Nearest measuring station location           |
-| stationId       | Number    | Measuring station ID                         |
-| stationLocation | Location  | Latitude/longitude of measuring station      |
-| pm25            | Number    | Fine particles pollution level (PM2.5)       |
-| pm10            | Number    | Coarse dust particles pollution level (PM10) |
-| o3              | Number    | Ozone level (O3)                             |
-| no2             | Number    | Nitrogen Dioxide level (NO2)                 |
-| co              | Number    | Carbon monoxide level (CO)                   |
-| observationTime | DateTime  | Observation date and time                    |
-| temperature     | Number    | Temperature in Celsius degrees               |
-| pressure        | Number    | Pressure level                               |
-| humidity        | Number    | Humidity level                               |
-
+| Channel ID      | Item Type            | Description                                  |
+|-----------------|----------------------|----------------------------------------------|
+| aqiLevel        | Number               | Air Quality Index                            |
+| aqiDescription  | String               | AQI Description                              |
+| locationName    | String               | Nearest measuring station location           |
+| stationId       | Number               | Measuring station ID                         |
+| stationLocation | Location             | Latitude/longitude of measuring station      |
+| pm25            | Number               | Fine particles pollution level (PM2.5)       |
+| pm10            | Number               | Coarse dust particles pollution level (PM10) |
+| o3              | Number               | Ozone level (O3)                             |
+| no2             | Number               | Nitrogen Dioxide level (NO2)                 |
+| co              | Number               | Carbon monoxide level (CO)                   |
+| observationTime | DateTime             | Observation date and time                    |
+| temperature     | Number:Temperature   | Temperature in Celsius degrees               |
+| pressure        | Number:Pressure      | Pressure level                               |
+| humidity        | Number:Dimensionless | Humidity level                               |
+| dominentPol     | String               | Dominent Polutor                             |
 
 `AQI Description` item provides a human-readable output that can be interpreted e.g. by MAP transformation.
 
 *Note that channels like* `pm25`, `pm10`, `o3`, `no2`, `co` *can sometimes return* `UNDEF` *value due to the fact that some stations don't provide measurements for them.*
 
-
 ## Full Example
 
 airquality.map:
 
-```
+```text
 -=-
 UNDEF=No data
 NULL=No data
@@ -92,7 +88,7 @@ HAZARDOUS=Hazardous
 
 airquality.things:
 
-```
+```java
 airquality:aqi:home "AirQuality" @ "Krakow" [ apikey="XXXXXXXXXXXX", location="50.06465,19.94498", refresh=60 ]
 airquality:aqi:warsaw "AirQuality in Warsaw" [ apikey="XXXXXXXXXXXX", location="52.22,21.01", refresh=60 ]
 airquality:aqi:brisbane "AirQuality in Brisbane" [ apikey="XXXXXXXXXXXX", stationId=5115 ]
@@ -100,7 +96,7 @@ airquality:aqi:brisbane "AirQuality in Brisbane" [ apikey="XXXXXXXXXXXX", statio
 
 airquality.items:
 
-```
+```java
 Group AirQuality <flow>
 
 Number   Aqi_Level           "Air Quality Index" <flow> (AirQuality) { channel="airquality:aqi:home:aqiLevel" }
@@ -117,14 +113,14 @@ Location Aqi_StationGeo      "Station Location" <office> (AirQuality) { channel=
 Number   Aqi_StationId       "Station ID" <pie> (AirQuality) { channel="airquality:aqi:home:stationId" }
 DateTime Aqi_ObservationTime "Time of observation [%1$tH:%1$tM]" <clock> (AirQuality) { channel="airquality:aqi:home:observationTime" }
 
-Number   Aqi_Temperature     "Temperature" <temperature> (AirQuality) { channel="airquality:aqi:home:temperature" }
-Number   Aqi_Pressure        "Pressure" <pressure> (AirQuality) { channel="airquality:aqi:home:pressure" }
-Number   Aqi_Humidity        "Humidity" <humidity> (AirQuality) { channel="airquality:aqi:home:humidity" }
+Number:Temperature  Aqi_Temperature     "Temperature" <temperature> (AirQuality) { channel="airquality:aqi:home:temperature" }
+Number:Pressure     Aqi_Pressure        "Pressure" <pressure> (AirQuality) { channel="airquality:aqi:home:pressure" }
+Number:DimensionLess Aqi_Humidity        "Humidity" <humidity> (AirQuality) { channel="airquality:aqi:home:humidity" }
 ```
 
 airquality.sitemap:
 
-```
+```perl
 sitemap airquality label="Air Quality" {
     Frame {
         Text item=Aqi_Level valuecolor=[
@@ -171,7 +167,7 @@ sitemap airquality label="Air Quality" {
 
 airquality.rules:
 
-```
+```java
 rule "Change lamp color to reflect Air Quality"
 when
     Item Aqi_Description changed

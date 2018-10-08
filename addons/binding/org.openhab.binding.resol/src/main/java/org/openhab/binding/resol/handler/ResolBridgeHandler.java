@@ -230,21 +230,27 @@ public class ResolBridgeHandler extends BaseBridgeHandler {
                             thingType = thingType.replace("/", "_");
                             thingType = thingType.replaceAll("[^A-Za-z0-9_-]+", "_");
 
-                            if (spec.getSourceDeviceSpec(packet).getPeerAddress() == 0x10) {
-                                logger.trace("Received Data from {} (0x{}/0x{}) naming it {}",
-                                        spec.getSourceDeviceSpec(packet).getName(lang),
-                                        Integer.toHexString(spec.getSourceDeviceSpec(packet).getSelfAddress()),
-                                        Integer.toHexString(spec.getSourceDeviceSpec(packet).getPeerAddress()),
-                                        thingType);
-                            } else {
-                                logger.trace("Ignoring Data from {} (0x{}/0x{}) naming it {}",
-                                        spec.getSourceDeviceSpec(packet).getName(lang),
-                                        Integer.toHexString(spec.getSourceDeviceSpec(packet).getSelfAddress()),
-                                        Integer.toHexString(spec.getSourceDeviceSpec(packet).getPeerAddress()),
-                                        thingType);
-                                return;
-                            }
-
+                            /*
+                             * It would be nice for the combination of MX and EM devices to filter only those with a
+                             * peerAddress of 0x10
+                             * because the MX redelivers the data from the EM to the DFA
+                             * See https://github.com/ramack/openhab2-addons/issues/23 to see why this is not so nice.
+                             */
+                            /* if (spec.getSourceDeviceSpec(packet).getPeerAddress() == 0x10) { */
+                            logger.trace("Received Data from {} (0x{}/0x{}) naming it {}",
+                                    spec.getSourceDeviceSpec(packet).getName(lang),
+                                    Integer.toHexString(spec.getSourceDeviceSpec(packet).getSelfAddress()),
+                                    Integer.toHexString(spec.getSourceDeviceSpec(packet).getPeerAddress()), thingType);
+                            /*
+                             * } else {
+                             * logger.trace("Ignoring Data from {} (0x{}/0x{}) naming it {}",
+                             * spec.getSourceDeviceSpec(packet).getName(lang),
+                             * Integer.toHexString(spec.getSourceDeviceSpec(packet).getSelfAddress()),
+                             * Integer.toHexString(spec.getSourceDeviceSpec(packet).getPeerAddress()),
+                             * thingType);
+                             * return;
+                             * }
+                             */
                             // TODO: if the thing gets deleted, we should also remove it from this list...
                             if (!availableDevices.contains(thingType)) {
                                 // register new device

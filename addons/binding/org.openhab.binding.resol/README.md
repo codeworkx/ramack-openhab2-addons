@@ -12,7 +12,7 @@ On top of the bridge devices, which enables access to the VBUS many, if not all,
 
 ## Discovery
 
-Discovery is tested for VBus-LAN adapters DL2 and DL3 devices, it should also work for other devices providing a live data port.
+Discovery is tested for VBus-LAN adapters DL2, DL3 and KM2 devices, it should also work for other devices providing a live data port.
 
 ## Binding Configuration
 

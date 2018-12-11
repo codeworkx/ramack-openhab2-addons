@@ -8,7 +8,7 @@
  */
 package org.openhab.binding.amazonechocontrol.internal.statedescription;
 
-import static org.openhab.binding.amazonechocontrol.AmazonEchoControlBindingConstants.*;
+import static org.openhab.binding.amazonechocontrol.internal.AmazonEchoControlBindingConstants.*;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -19,22 +19,22 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.thing.Channel;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingRegistry;
+import org.eclipse.smarthome.core.thing.ThingUID;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.thing.type.DynamicStateDescriptionProvider;
 import org.eclipse.smarthome.core.types.StateDescription;
 import org.eclipse.smarthome.core.types.StateOption;
-import org.openhab.binding.amazonechocontrol.handler.AccountHandler;
-import org.openhab.binding.amazonechocontrol.handler.EchoHandler;
-import org.openhab.binding.amazonechocontrol.handler.FlashBriefingProfileHandler;
 import org.openhab.binding.amazonechocontrol.internal.Connection;
 import org.openhab.binding.amazonechocontrol.internal.ConnectionException;
 import org.openhab.binding.amazonechocontrol.internal.HttpException;
+import org.openhab.binding.amazonechocontrol.internal.handler.AccountHandler;
+import org.openhab.binding.amazonechocontrol.internal.handler.EchoHandler;
+import org.openhab.binding.amazonechocontrol.internal.handler.FlashBriefingProfileHandler;
 import org.openhab.binding.amazonechocontrol.internal.jsons.JsonBluetoothStates.BluetoothState;
 import org.openhab.binding.amazonechocontrol.internal.jsons.JsonBluetoothStates.PairedDevice;
 import org.openhab.binding.amazonechocontrol.internal.jsons.JsonDevices.Device;
@@ -57,9 +57,8 @@ import com.google.gson.JsonSyntaxException;
  *
  * @author Michael Geramb - Initial contribution
  */
+@Component(service = { DynamicStateDescriptionProvider.class, AmazonEchoDynamicStateDescriptionProvider.class })
 @NonNullByDefault
-@Component(service = { DynamicStateDescriptionProvider.class,
-        AmazonEchoDynamicStateDescriptionProvider.class }, immediate = true)
 public class AmazonEchoDynamicStateDescriptionProvider implements DynamicStateDescriptionProvider {
 
     private final Logger logger = LoggerFactory.getLogger(AmazonEchoDynamicStateDescriptionProvider.class);
@@ -81,6 +80,19 @@ public class AmazonEchoDynamicStateDescriptionProvider implements DynamicStateDe
         }
         Thing thing = thingRegistry.get(channel.getUID().getThingUID());
         if (thing == null) {
+            return null;
+        }
+        ThingUID accountThingId = thing.getBridgeUID();
+        Thing accountThing = thingRegistry.get(accountThingId);
+        if (accountThing == null) {
+            return null;
+        }
+        AccountHandler accountHandler = (AccountHandler) accountThing.getHandler();
+        if (accountHandler == null) {
+            return null;
+        }
+        Connection connection = accountHandler.findConnection();
+        if (connection == null || !connection.getIsLoggedIn()) {
             return null;
         }
         return thing.getHandler();
@@ -148,7 +160,7 @@ public class AmazonEchoDynamicStateDescriptionProvider implements DynamicStateDe
             ArrayList<StateOption> options = new ArrayList<>();
             options.add(new StateOption("", ""));
             @Nullable
-            Map<@NonNull String, @Nullable PlayList @Nullable []> playlistMap = playLists.playlists;
+            Map<String, @Nullable PlayList @Nullable []> playlistMap = playLists.playlists;
             if (playlistMap != null) {
                 for (PlayList[] innerLists : playlistMap.values()) {
                     if (innerLists != null && innerLists.length > 0) {
@@ -208,8 +220,7 @@ public class AmazonEchoDynamicStateDescriptionProvider implements DynamicStateDe
             if (accountHandler == null) {
                 return originalStateDescription;
             }
-            @NonNull
-            List<@NonNull Device> devices = accountHandler.getLastKnownDevices();
+            List<Device> devices = accountHandler.getLastKnownDevices();
             if (devices.size() == 0) {
                 return originalStateDescription;
             }
@@ -262,8 +273,7 @@ public class AmazonEchoDynamicStateDescriptionProvider implements DynamicStateDe
             if (account == null) {
                 return originalStateDescription;
             }
-            @NonNull
-            List<@NonNull FlashBriefingProfileHandler> flashbriefings = account.getFlashBriefingProfileHandlers();
+            List<FlashBriefingProfileHandler> flashbriefings = account.getFlashBriefingProfileHandlers();
             if (flashbriefings.isEmpty()) {
                 return originalStateDescription;
             }

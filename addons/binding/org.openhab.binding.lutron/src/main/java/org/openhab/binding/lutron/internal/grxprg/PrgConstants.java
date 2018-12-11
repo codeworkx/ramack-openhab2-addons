@@ -10,12 +10,12 @@ package org.openhab.binding.lutron.internal.grxprg;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
-import org.openhab.binding.lutron.LutronBindingConstants;
+import org.openhab.binding.lutron.internal.LutronBindingConstants;
 
 /**
  * Defines common constants, which are used across the whole binding.
  *
- * @author Tim Roberts
+ * @author Tim Roberts - Initial contribution
  */
 @NonNullByDefault
 public class PrgConstants {

@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ActivationPolicy: lazy
-Bundle-ClassPath: .
+Bundle-ClassPath: ., libs/vbus-0.3.0-SNAPSHOT.jar
 Bundle-ManifestVersion: 2
 Bundle-Name: Resol Binding
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8

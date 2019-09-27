@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.2.0" configuration-pid="binding.resol" immediate="true" name="org.openhab.binding.resol.internal.ResolHandlerFactory">
-   <service>
-      <provide interface="org.eclipse.smarthome.core.thing.binding.ThingHandlerFactory"/>
-   </service>
-   <reference bind="setLocaleProvider" interface="org.eclipse.smarthome.core.i18n.LocaleProvider" name="LocaleProvider" unbind="unsetLocaleProvider"/>
-   <implementation class="org.openhab.binding.resol.internal.ResolHandlerFactory"/>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.2.0" immediate="true" name="org.openhab.binding.resol.internal.ResolHandlerFactory" configuration-pid="binding.resol">
+    <service servicefactory="false">
+        <provide interface="org.eclipse.smarthome.core.thing.binding.ThingHandlerFactory"/>
+    </service>
+    <reference name="LocaleProvider" interface="org.eclipse.smarthome.core.i18n.LocaleProvider" cardinality="1..1" policy="static" bind="setLocaleProvider" unbind="unsetLocaleProvider"/>
+    <implementation class="org.openhab.binding.resol.internal.ResolHandlerFactory"/>
 </scr:component>
